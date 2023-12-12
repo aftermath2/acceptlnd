@@ -1,0 +1,10 @@
+policies:
+  -
+    node:
+      channels:
+        incoming_disabled:
+          operation: mean
+            max: 0.1
+        outgoing_disabled:
+        operation: mean
+            max: 0.05

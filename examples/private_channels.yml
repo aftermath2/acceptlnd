@@ -1,0 +1,20 @@
+policies:
+  -
+    reject_private_channels: true
+
+--
+
+policies:
+  - # Set a range for the private channels size
+    conditions:
+      is_private: true
+    request:
+      channel_capacity:
+        min: 100_000
+        max: 1_000_000
+  - # Set a minimum size for public channels
+    conditions:
+      is_private: false
+    request:
+      channel_capacity:
+        min: 1_000_000

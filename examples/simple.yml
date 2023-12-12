@@ -1,0 +1,9 @@
+policies:
+  - 
+    request:
+      channel_capacity:
+        min: 3_000_000
+    node:
+      hybrid: true
+      channels:
+        zero_base_fees: true

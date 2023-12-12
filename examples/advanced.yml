@@ -1,0 +1,23 @@
+policies:
+  - 
+    request:
+      channel_capacity:
+        min: 5_000_000
+      channel_reserve:
+        max: 50_000
+    node:
+      channels:
+        outgoing_fee_rate:
+          operation: median
+          min: 0
+          max: 200
+        outgoing_base_fees:
+          operation: range
+          max: 1
+        block_height:
+          operation: mean
+          max: 770_000
+        time_lock_delta:
+          operation: mode
+          min: 40
+          max: 80

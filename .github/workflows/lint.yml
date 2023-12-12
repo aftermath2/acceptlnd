@@ -1,0 +1,41 @@
+name: Lint
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+    paths:
+      - ".github/workflows/server-unit-tests.yml"
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+
+jobs:
+  server:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run revive linter
+        uses: docker://morphy/revive-action:v2
+
+  go-mod-tidy:
+    name: Go mod tidy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+
+      - name: Run go mod tidy
+        run: go mod tidy
+
+      - name: Ensure clean git state
+        run: git diff-index --quiet HEAD -- || (echo "Please run 'go mod tidy' and commit changes." && exit 1)

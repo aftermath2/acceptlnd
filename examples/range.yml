@@ -1,0 +1,23 @@
+policies:
+  - # Accept channels from medium-sized nodes only
+    node:
+      channels:
+        number:
+          min: 30
+          max: 150
+
+--
+
+policies:
+  - # Accept channels bigger than 1M sats
+    request:
+      channel_capacity:
+        min: 1_000_000
+
+--
+
+policies:
+  - # Accept channels from nodes with a capacity lower than 1 BTC
+    node:
+      capacity:
+        max: 100_000_000

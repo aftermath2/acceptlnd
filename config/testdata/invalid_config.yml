@@ -1,0 +1,12 @@
+rpc_address: 127.0.0.1:10001
+certificate_path: ./testdata/tls.mock
+macaroon_path: ./testdata/acceptlnd.mock
+policies:
+  -
+    conditions:
+      node:
+        capacity:
+          min: minimum
+    request:
+      channel_capacity:
+        min: 3_000_000

@@ -1,0 +1,19 @@
+policies:
+  - # Enforce policies on nodes with a capacity of 1 BTC or less
+    conditions:
+      node:
+        capacity:
+          max: 100_000_000
+    node: # This will only be enforced if the condition above is satisfied
+      channels:
+        zero_base_fees: true
+  - # If the policy above is not enforced, the next one is evaluated
+    conditions:
+      node:
+        capacity:
+          min: 100_000_000
+    node:
+      channels:
+        outgoing_fee_rates:
+          operation: median
+          max: 1000
