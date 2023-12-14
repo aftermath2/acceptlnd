@@ -49,6 +49,7 @@ Configuration schema:
 | Key | Type | Required | Description |
 | -- | -- | -- | -- |
 | **rpc_address** | string | ✔ | LND GRPC address (`host:port`) |
+| **rpc_timeout** | duration | ✖ | LND GRPC connection timeout.  Set it to `0` for no timeout. Default: `60s` |
 | **certificate_path** | string | ✔ | Path to LND's TLS certificate |
 | **macaroon_path** | string | ✔ | Path to the macaroon file. See [macaroon](#macaroon) |
 | **policies** | [][Policy](#policy) | ✖ | Set of policies to enforce |

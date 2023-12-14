@@ -4,6 +4,7 @@ package lightning
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"time"
 
@@ -28,12 +29,25 @@ type Client interface {
 func NewClient(config config.Config) (Client, error) {
 	opts, err := loadGRPCOpts(config)
 	if err != nil {
-		return nil, errors.Wrap(err, "loading grpc options")
+		return nil, errors.Wrap(err, "loading GRPC options")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	if config.RPCTimeout == nil {
+		defaultTimeout := 60 * time.Second
+		config.RPCTimeout = &defaultTimeout
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), *config.RPCTimeout)
 	defer cancel()
 
+	if *config.RPCTimeout == 0 {
+		ctx = context.Background()
+	}
+
+	slog.Info("Connecting to LND",
+		slog.String("address", config.RPCAddress),
+		slog.String("timeout", config.RPCTimeout.String()),
+	)
 	conn, err := grpc.DialContext(ctx, config.RPCAddress, opts...)
 	if err != nil {
 		return nil, err
