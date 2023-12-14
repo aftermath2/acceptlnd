@@ -18,18 +18,18 @@ type Conditions struct {
 // Match returns true if all the conditions Match.
 func (c *Conditions) Match(
 	req *lnrpc.ChannelAcceptRequest,
-	nodePubKey string,
-	peerNode *lnrpc.NodeInfo,
+	node *lnrpc.GetInfoResponse,
+	peer *lnrpc.NodeInfo,
 ) bool {
 	if c == nil {
 		return true
 	}
 
-	if c.checkWhitelist(peerNode.Node.PubKey) {
+	if c.checkWhitelist(peer.Node.PubKey) {
 		return true
 	}
 
-	if !c.checkBlacklist(peerNode.Node.PubKey) {
+	if !c.checkBlacklist(peer.Node.PubKey) {
 		return false
 	}
 
@@ -45,7 +45,7 @@ func (c *Conditions) Match(
 		return false
 	}
 
-	if err := c.Node.evaluate(nodePubKey, peerNode); err != nil {
+	if err := c.Node.evaluate(node, peer); err != nil {
 		return false
 	}
 

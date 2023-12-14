@@ -1,3 +1,4 @@
+# Set channel capacity requirements based on the initiator node's number of channels
 policies:
 	-
     conditions:

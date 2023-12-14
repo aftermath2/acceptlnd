@@ -25,10 +25,10 @@ type Policy struct {
 // Evaluate set of policies.
 func (p *Policy) Evaluate(
 	req *lnrpc.ChannelAcceptRequest,
-	nodePublicKey string,
+	node *lnrpc.GetInfoResponse,
 	peerNode *lnrpc.NodeInfo,
 ) error {
-	if p.Conditions != nil && !p.Conditions.Match(req, nodePublicKey, peerNode) {
+	if p.Conditions != nil && !p.Conditions.Match(req, node, peerNode) {
 		return nil
 	}
 
@@ -56,7 +56,7 @@ func (p *Policy) Evaluate(
 		return err
 	}
 
-	return p.Node.evaluate(nodePublicKey, peerNode)
+	return p.Node.evaluate(node, peerNode)
 }
 
 func (p *Policy) checkRejectAll() bool {
