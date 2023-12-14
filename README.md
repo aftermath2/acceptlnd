@@ -138,7 +138,8 @@ Parameters related to the node that is initiating the channel.
 
 | Name | Type | Description |
 | -- | -- | -- |
-| **capacity** | range | Peer's node capacity |
+| **age** | range | Peer node age in blocks, based on the oldest announced channel |
+| **capacity** | range | Peer node capacity |
 | **hybrid** | boolean | Whether the peer will be required to be hybrid |
 | **feature_flags** | []int | Feature flags the peer node must know. Check out [lnrpc.FeatureBit](https://lightning.engineering/api-docs/api/lnd/lightning/query-routes#lnrpcfeaturebit) |
 | **Channels** | [Channels](#Channels) | Initiator node channels |
@@ -150,8 +151,8 @@ Parameters related to the initiator node's channels.
 | Name | Type | Description |
 | -- | -- | -- |
 | **number** | range | Peer's number of channels |
-| **zero_base_fees** | boolean | Whether the peer's channels must all have zero base fees |
 | **capacity** | stat_range | Channels size |
+| **zero_base_fees** | boolean | Whether the peer's channels must all have zero base fees |
 | **block_height** | stat_range | Channels block height |
 | **time_lock_delta** | stat_range | Channels time lock delta |
 | **min_htlc** | stat_range | Channels minimum HTLC |

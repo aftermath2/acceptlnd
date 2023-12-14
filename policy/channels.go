@@ -26,7 +26,7 @@ type Channels struct {
 	OutgoingDisabled *StatRange[float64] `yaml:"outgoing_disabled,omitempty"`
 }
 
-func (c *Channels) evaluate(nodePubKey string, peer *lnrpc.NodeInfo) error {
+func (c *Channels) evaluate(nodePublicKey string, peer *lnrpc.NodeInfo) error {
 	if c == nil {
 		return nil
 	}
@@ -63,7 +63,7 @@ func (c *Channels) evaluate(nodePubKey string, peer *lnrpc.NodeInfo) error {
 		return errors.New("Channels last update " + c.LastUpdateDiff.Reason())
 	}
 
-	if !c.checkTogether(nodePubKey, peer) {
+	if !c.checkTogether(nodePublicKey, peer) {
 		return errors.New("Channels together " + c.Together.Reason())
 	}
 

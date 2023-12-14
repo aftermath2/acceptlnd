@@ -9,7 +9,7 @@ import (
 )
 
 func TestMatch(t *testing.T) {
-	nodePublicKey := "node_public_key"
+	node := &lnrpc.GetInfoResponse{IdentityPubkey: "node_public_key"}
 	peerPublicKey := "peer_public_key"
 	defaultReq := &lnrpc.ChannelAcceptRequest{}
 	defaultPeer := &lnrpc.NodeInfo{
@@ -118,7 +118,7 @@ func TestMatch(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			actual := tc.conditions.Match(tc.req, nodePublicKey, tc.peer)
+			actual := tc.conditions.Match(tc.req, node, tc.peer)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}

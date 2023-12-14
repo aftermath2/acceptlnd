@@ -8,7 +8,7 @@ import (
 )
 
 func TestEvaluatePolicy(t *testing.T) {
-	nodePublicKey := "node_public_key"
+	node := &lnrpc.GetInfoResponse{IdentityPubkey: "node_public_key"}
 	peerPublicKey := "peer_public_key"
 	defaultReq := &lnrpc.ChannelAcceptRequest{}
 	defaultPeer := &lnrpc.NodeInfo{
@@ -141,7 +141,7 @@ func TestEvaluatePolicy(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := tc.policy.Evaluate(tc.req, nodePublicKey, tc.peer)
+			err := tc.policy.Evaluate(tc.req, node, tc.peer)
 			if tc.fail {
 				assert.NotNil(t, err)
 			} else {

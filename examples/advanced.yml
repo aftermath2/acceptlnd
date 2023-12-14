@@ -6,6 +6,8 @@ policies:
       channel_reserve:
         max: 50_000
     node:
+      age:
+        min: 52_560
       channels:
         outgoing_fee_rate:
           operation: median

@@ -8,7 +8,7 @@ import (
 )
 
 func TestEvaluateNode(t *testing.T) {
-	nodePublicKey := "node_public_key"
+	node := &lnrpc.GetInfoResponse{IdentityPubkey: "node_public_key"}
 	peerPublicKey := "peer_public_key"
 	defaultPeer := &lnrpc.NodeInfo{
 		Node: &lnrpc.LightningNode{
@@ -17,6 +17,7 @@ func TestEvaluateNode(t *testing.T) {
 	}
 	tru := true
 	max := int64(1)
+	maxu32 := uint32(1)
 
 	cases := []struct {
 		node *Node
@@ -45,6 +46,22 @@ func TestEvaluateNode(t *testing.T) {
 			peer: &lnrpc.NodeInfo{
 				TotalCapacity: 100_000_000,
 				Node:          defaultPeer.Node,
+			},
+			fail: true,
+		},
+		{
+			desc: "Age",
+			node: &Node{
+				Age: &Range[uint32]{
+					Max: &maxu32,
+				},
+			},
+			peer: &lnrpc.NodeInfo{
+				Channels: []*lnrpc.ChannelEdge{
+					{
+						ChannelId: 623702369048395776,
+					},
+				},
 			},
 			fail: true,
 		},
@@ -85,7 +102,7 @@ func TestEvaluateNode(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := tc.node.evaluate(nodePublicKey, tc.peer)
+			err := tc.node.evaluate(node, tc.peer)
 			if tc.fail {
 				assert.NotNil(t, err)
 			} else {
@@ -93,6 +110,95 @@ func TestEvaluateNode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCheckAge(t *testing.T) {
+	bestBlockHeight := uint32(820931)
+	one := uint32(1)
+
+	cases := []struct {
+		desc     string
+		age      *Range[uint32]
+		channels []*lnrpc.ChannelEdge
+		expected bool
+	}{
+		{
+			desc: "Min",
+			age: &Range[uint32]{
+				Min: &one,
+			},
+			channels: []*lnrpc.ChannelEdge{
+				{ChannelId: 902611085473873920}, // 820920
+				{ChannelId: 902622080590151680}, // 820930
+			},
+			expected: true,
+		},
+		{
+			desc: "Min no match",
+			age: &Range[uint32]{
+				Min: &one,
+			},
+			channels: []*lnrpc.ChannelEdge{
+				{ChannelId: 902623180101779456}, // 820931
+			},
+			expected: false,
+		},
+		{
+			desc: "Max",
+			age: &Range[uint32]{
+				Max: &one,
+			},
+			channels: []*lnrpc.ChannelEdge{
+				{ChannelId: 902622080590151680}, // 820930
+				{ChannelId: 902623180101779456}, // 820931
+			},
+			expected: true,
+		},
+		{
+			desc: "Max no match",
+			age: &Range[uint32]{
+				Max: &one,
+			},
+			channels: []*lnrpc.ChannelEdge{
+				{ChannelId: 902620981078523904}, // 820929
+				{ChannelId: 902623180101779456}, // 820931
+			},
+			expected: false,
+		},
+		{
+			desc: "No channels min",
+			age: &Range[uint32]{
+				Min: &one,
+			},
+			channels: nil,
+			expected: false,
+		},
+		{
+			desc: "No channels max",
+			age: &Range[uint32]{
+				Max: &one,
+			},
+			channels: nil,
+			expected: true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			node := Node{
+				Age: tc.age,
+			}
+
+			actual := node.checkAge(bestBlockHeight, tc.channels)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+
+	t.Run("Nil", func(t *testing.T) {
+		node := Node{}
+		actual := node.checkAge(bestBlockHeight, nil)
+		assert.True(t, actual)
+	})
 }
 
 func TestCheckHybrid(t *testing.T) {
