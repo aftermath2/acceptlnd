@@ -115,6 +115,7 @@ func TestEvaluateNode(t *testing.T) {
 func TestCheckAge(t *testing.T) {
 	bestBlockHeight := uint32(820931)
 	one := uint32(1)
+	two := uint32(2)
 
 	cases := []struct {
 		desc     string
@@ -136,7 +137,7 @@ func TestCheckAge(t *testing.T) {
 		{
 			desc: "Min no match",
 			age: &Range[uint32]{
-				Min: &one,
+				Min: &two,
 			},
 			channels: []*lnrpc.ChannelEdge{
 				{ChannelId: 902623180101779456}, // 820931
@@ -149,7 +150,6 @@ func TestCheckAge(t *testing.T) {
 				Max: &one,
 			},
 			channels: []*lnrpc.ChannelEdge{
-				{ChannelId: 902622080590151680}, // 820930
 				{ChannelId: 902623180101779456}, // 820931
 			},
 			expected: true,
@@ -164,6 +164,18 @@ func TestCheckAge(t *testing.T) {
 				{ChannelId: 902623180101779456}, // 820931
 			},
 			expected: false,
+		},
+		{
+			desc: "Range",
+			age: &Range[uint32]{
+				Min: &one,
+				Max: &two,
+			},
+			channels: []*lnrpc.ChannelEdge{
+				{ChannelId: 902622080590151680}, // 820930
+				{ChannelId: 902623180101779456}, // 820931
+			},
+			expected: true,
 		},
 		{
 			desc: "No channels min",
