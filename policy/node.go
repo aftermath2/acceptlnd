@@ -58,8 +58,8 @@ func (n *Node) checkAge(bestBlockHeight uint32, channels []*lnrpc.ChannelEdge) b
 		}
 	}
 
-	difference := bestBlockHeight - oldestChannel
-	return n.Age.Contains(difference)
+	age := (bestBlockHeight - oldestChannel) + 1
+	return n.Age.Contains(age)
 }
 
 func (n *Node) checkHybrid(addresses []*lnrpc.NodeAddress) bool {
