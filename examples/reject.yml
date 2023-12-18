@@ -6,12 +6,6 @@ policies:
 
 policies:
   -
-    reject_zero_conf_channels: true
-
---
-
-policies:
-  -
     blacklist:
       - public_key_1
       - public_key_2
