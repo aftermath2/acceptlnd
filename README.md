@@ -49,7 +49,7 @@ Configuration schema:
 | Key | Type | Required | Description |
 | -- | -- | -- | -- |
 | **rpc_address** | string | ✔ | LND GRPC address (`host:port`) |
-| **rpc_timeout** | duration | ✖ | LND GRPC connection timeout.  Set it to `0` for no timeout. Default: `60s` |
+| **rpc_timeout** | duration | ✖ | LND GRPC connection timeout. Valid units are {ms, s, m, h}. Use `0` for no timeout. Default: `60s` |
 | **certificate_path** | string | ✔ | Path to LND's TLS certificate |
 | **macaroon_path** | string | ✔ | Path to the macaroon file. See [macaroon](#macaroon) |
 | **policies** | [][Policy](#policy) | ✖ | Set of policies to enforce |
@@ -78,8 +78,9 @@ A policy would only be enforced if its conditions are satisfied, or if it has no
 | **reject_all** | boolean | Reject all channel requests |
 | **whitelist** | []string | List of nodes public keys whose requests will be accepted |
 | **blacklist** | []string | List of nodes public keys whose requests will be rejected |
+| **accept_zero_conf_channels** | boolean | Whether to accept zero confirmation channels |
+| **zero_conf_list** | []string | List of nodes public keys whose zero conf requests will be accepted. Requires `accept_zero_conf_channels` to be `true` | 
 | **reject_private_channels** | boolean | Whether private channels should be rejected |
-| **reject_zero_conf_channels** | boolean | Whether to reject zero confirmation channels |
 | **request** | [Request](#request) | Parameters related to the channel opening request |
 | **node** | [Node](#node) | Parameters related to the channel initiator |
 
