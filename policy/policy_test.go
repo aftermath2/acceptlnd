@@ -17,6 +17,7 @@ func TestEvaluatePolicy(t *testing.T) {
 		},
 	}
 	tru := true
+	fals := false
 	max := uint64(1)
 
 	cases := []struct {
@@ -58,11 +59,11 @@ func TestEvaluatePolicy(t *testing.T) {
 		{
 			desc: "Whitelist",
 			policy: Policy{
-				Whitelist: &[]string{peerPublicKey},
+				Whitelist: &[]string{"other_public_key"},
 			},
 			req:  defaultReq,
 			peer: defaultPeer,
-			fail: false,
+			fail: true,
 		},
 		{
 			desc: "Blacklist",
@@ -94,9 +95,9 @@ func TestEvaluatePolicy(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Reject wants zero conf",
+			desc: "Accept wants zero conf",
 			policy: Policy{
-				RejectZeroConfChannels: &tru,
+				AcceptZeroConfChannels: &fals,
 			},
 			req: &lnrpc.ChannelAcceptRequest{
 				WantsZeroConf: true,
@@ -190,61 +191,66 @@ func TestCheckWhitelist(t *testing.T) {
 	publicKey := "key"
 
 	cases := []struct {
+		whitelist *[]string
 		desc      string
 		publicKey string
-		whitelist []string
 		expected  bool
 	}{
 		{
 			desc:      "Whitelisted",
 			publicKey: publicKey,
-			whitelist: []string{publicKey},
+			whitelist: &[]string{publicKey},
 			expected:  true,
 		},
 		{
 			desc:      "Not whitelisted",
 			publicKey: "not key",
-			whitelist: []string{publicKey},
+			whitelist: &[]string{publicKey},
 			expected:  false,
+		},
+		{
+			desc:      "Nil",
+			whitelist: nil,
+			expected:  true,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			policy := Policy{
-				Whitelist: &tc.whitelist,
+				Whitelist: tc.whitelist,
 			}
 
 			actual := policy.checkWhitelist(tc.publicKey)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
-
-	t.Run("Nil", func(t *testing.T) {
-		policy := Policy{}
-		assert.False(t, policy.checkWhitelist(""))
-	})
 }
 
 func TestCheckBlacklist(t *testing.T) {
 	publicKey := "key"
 
 	cases := []struct {
+		blacklist *[]string
 		desc      string
 		publicKey string
-		blacklist []string
 		expected  bool
 	}{
 		{
 			desc:      "Blacklisted",
 			publicKey: publicKey,
-			blacklist: []string{publicKey},
+			blacklist: &[]string{publicKey},
 			expected:  false,
 		},
 		{
 			desc:      "Not blacklisted",
 			publicKey: "not key",
-			blacklist: []string{publicKey},
+			blacklist: &[]string{publicKey},
+			expected:  true,
+		},
+		{
+			desc:      "Nil",
+			blacklist: nil,
 			expected:  true,
 		},
 	}
@@ -252,18 +258,13 @@ func TestCheckBlacklist(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			policy := Policy{
-				Blacklist: &tc.blacklist,
+				Blacklist: tc.blacklist,
 			}
 
 			actual := policy.checkBlacklist(tc.publicKey)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
-
-	t.Run("Nil", func(t *testing.T) {
-		policy := Policy{}
-		assert.True(t, policy.checkBlacklist(""))
-	})
 }
 
 func TestCheckPrivate(t *testing.T) {
@@ -312,46 +313,68 @@ func TestCheckPrivate(t *testing.T) {
 }
 
 func TestCheckZeroConf(t *testing.T) {
+	publicKey := "public_key"
+
 	cases := []struct {
+		zeroConfList   *[]string
 		desc           string
-		rejectZeroConf bool
+		publicKey      string
+		acceptZeroConf bool
 		wantsZeroConf  bool
 		expected       bool
 	}{
 		{
-			desc:           "Reject",
-			rejectZeroConf: true,
+			desc:          "No zero conf",
+			wantsZeroConf: false,
+			expected:      true,
+		},
+		{
+			desc:           "Accept all",
+			acceptZeroConf: true,
+			wantsZeroConf:  true,
+			expected:       true,
+		},
+		{
+			desc:           "Accept in list",
+			publicKey:      publicKey,
+			zeroConfList:   &[]string{publicKey},
+			acceptZeroConf: true,
+			wantsZeroConf:  true,
+			expected:       true,
+		},
+		{
+			desc:           "Reject all",
+			acceptZeroConf: false,
 			wantsZeroConf:  true,
 			expected:       false,
 		},
 		{
-			desc:           "Accept",
-			rejectZeroConf: true,
-			wantsZeroConf:  false,
-			expected:       true,
+			desc:           "Reject even if in list",
+			publicKey:      publicKey,
+			zeroConfList:   &[]string{publicKey},
+			acceptZeroConf: false,
+			wantsZeroConf:  true,
+			expected:       false,
 		},
 		{
-			desc:           "Accept 2",
-			rejectZeroConf: false,
+			desc:           "Reject not in list",
+			publicKey:      publicKey,
+			zeroConfList:   &[]string{"other_public_key"},
+			acceptZeroConf: true,
 			wantsZeroConf:  true,
-			expected:       true,
+			expected:       false,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			policy := Policy{
-				RejectZeroConfChannels: &tc.rejectZeroConf,
+				AcceptZeroConfChannels: &tc.acceptZeroConf,
+				ZeroConfList:           tc.zeroConfList,
 			}
 
-			actual := policy.checkZeroConf(tc.wantsZeroConf)
+			actual := policy.checkZeroConf(tc.publicKey, tc.wantsZeroConf)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
-
-	t.Run("Empty", func(t *testing.T) {
-		policy := Policy{}
-		actual := policy.checkZeroConf(true)
-		assert.True(t, actual)
-	})
 }

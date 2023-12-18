@@ -75,8 +75,8 @@ func handleChannelRequests(config config.Config, client lightning.Client) error 
 		}
 		slog.Debug("Channel opening request", slog.Any("request", req))
 
-		resp := &lnrpc.ChannelAcceptResponse{Accept: false, PendingChanId: req.PendingChanId}
-		if err := processRequest(config, client, req); err != nil {
+		resp, err := handleRequest(config, client, req)
+		if err != nil {
 			resp.Error = err.Error()
 		} else {
 			resp.Accept = true
@@ -95,35 +95,41 @@ func handleChannelRequests(config config.Config, client lightning.Client) error 
 	}
 }
 
-func processRequest(
+func handleRequest(
 	config config.Config,
 	client lightning.Client,
 	req *lnrpc.ChannelAcceptRequest,
-) error {
+) (*lnrpc.ChannelAcceptResponse, error) {
 	ctx := context.Background()
+	resp := &lnrpc.ChannelAcceptResponse{Accept: false, PendingChanId: req.PendingChanId}
 
 	node, err := client.GetInfo(ctx, &lnrpc.GetInfoRequest{})
 	if err != nil {
-		return errors.Wrap(err, "getting node information")
+		return resp, errors.Wrap(err, "getting node information")
 	}
 
 	getPeerInfoReq := &lnrpc.NodeInfoRequest{
 		PubKey:          hex.EncodeToString(req.NodePubkey),
 		IncludeChannels: true,
 	}
-	peerNode, err := client.GetNodeInfo(ctx, getPeerInfoReq)
+	peer, err := client.GetNodeInfo(ctx, getPeerInfoReq)
 	if err != nil {
-		return errors.New("Internal server error")
+		return resp, errors.New("Internal server error")
 	}
-	slog.Debug("Peer node information", slog.Any("node", peerNode))
+	slog.Debug("Peer node information", slog.Any("node", peer))
 
 	for _, policy := range config.Policies {
-		if err := policy.Evaluate(req, node, peerNode); err != nil {
-			return err
+		if err := policy.Evaluate(req, node, peer); err != nil {
+			return resp, err
 		}
 	}
 
-	return nil
+	if req.WantsZeroConf {
+		resp.ZeroConf = true
+		resp.MinAcceptDepth = 0
+	}
+
+	return resp, nil
 }
 
 type response struct {

@@ -17,18 +17,19 @@ type Policy struct {
 	Node                   *Node       `yaml:"node,omitempty"`
 	Whitelist              *[]string   `yaml:"whitelist,omitempty"`
 	Blacklist              *[]string   `yaml:"blacklist,omitempty"`
+	ZeroConfList           *[]string   `yaml:"zero_conf_list,omitempty"`
 	RejectAll              *bool       `yaml:"reject_all,omitempty"`
 	RejectPrivateChannels  *bool       `yaml:"reject_private_channels,omitempty"`
-	RejectZeroConfChannels *bool       `yaml:"reject_zero_conf_channels,omitempty"`
+	AcceptZeroConfChannels *bool       `yaml:"accept_zero_conf_channels,omitempty"`
 }
 
 // Evaluate set of policies.
 func (p *Policy) Evaluate(
 	req *lnrpc.ChannelAcceptRequest,
 	node *lnrpc.GetInfoResponse,
-	peerNode *lnrpc.NodeInfo,
+	peer *lnrpc.NodeInfo,
 ) error {
-	if p.Conditions != nil && !p.Conditions.Match(req, node, peerNode) {
+	if p.Conditions != nil && !p.Conditions.Match(req, node, peer) {
 		return nil
 	}
 
@@ -36,11 +37,11 @@ func (p *Policy) Evaluate(
 		return errors.New("No new channels are accepted")
 	}
 
-	if p.checkWhitelist(peerNode.Node.PubKey) {
-		return nil
+	if !p.checkWhitelist(peer.Node.PubKey) {
+		return errors.New("Node is not whitelisted")
 	}
 
-	if !p.checkBlacklist(peerNode.Node.PubKey) {
+	if !p.checkBlacklist(peer.Node.PubKey) {
 		return errors.New("Node is blacklisted")
 	}
 
@@ -48,7 +49,7 @@ func (p *Policy) Evaluate(
 		return errors.New("Private channels are not accepted")
 	}
 
-	if !p.checkZeroConf(req.WantsZeroConf) {
+	if !p.checkZeroConf(peer.Node.PubKey, req.WantsZeroConf) {
 		return errors.New("Zero conf channels are not accepted")
 	}
 
@@ -56,7 +57,7 @@ func (p *Policy) Evaluate(
 		return err
 	}
 
-	return p.Node.evaluate(node, peerNode)
+	return p.Node.evaluate(node, peer)
 }
 
 func (p *Policy) checkRejectAll() bool {
@@ -68,7 +69,7 @@ func (p *Policy) checkRejectAll() bool {
 
 func (p *Policy) checkWhitelist(publicKey string) bool {
 	if p.Whitelist == nil {
-		return false
+		return true
 	}
 
 	for _, pubKey := range *p.Whitelist {
@@ -99,9 +100,24 @@ func (p *Policy) checkPrivate(private bool) bool {
 	return private && !*p.RejectPrivateChannels
 }
 
-func (p *Policy) checkZeroConf(wantsZeroConf bool) bool {
-	if p.RejectZeroConfChannels == nil || !wantsZeroConf {
+func (p *Policy) checkZeroConf(publicKey string, wantsZeroConf bool) bool {
+	if !wantsZeroConf {
 		return true
 	}
-	return wantsZeroConf && !*p.RejectZeroConfChannels
+
+	if p.AcceptZeroConfChannels == nil || !*p.AcceptZeroConfChannels {
+		return false
+	}
+
+	if p.ZeroConfList != nil {
+		for _, pubKey := range *p.ZeroConfList {
+			if publicKey == pubKey {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	return true
 }
