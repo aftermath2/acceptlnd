@@ -48,11 +48,11 @@ Configuration schema:
 
 | Key | Type | Required | Description |
 | -- | -- | -- | -- |
-| **rpc_address** | string | ✓ | LND GRPC address (`host:port`) |
-| **rpc_timeout** | duration | ☓ | LND GRPC connection timeout. Valid units are {ms, s, m, h}. Use `0` for no timeout. Default: `60s` |
-| **certificate_path** | string | ✓ | Path to LND's TLS certificate |
-| **macaroon_path** | string | ✓ | Path to the macaroon file. See [macaroon](#macaroon) |
-| **policies** | [][Policy](#policy) | ☓ | Set of policies to enforce |
+| **rpc_address** | string | 🗸 | LND GRPC address (`host:port`) |
+| **rpc_timeout** | duration | X | LND GRPC connection timeout. Valid units are {ms, s, m, h}. Use `0` for no timeout. Default: `60s` |
+| **certificate_path** | string | 🗸 | Path to LND's TLS certificate |
+| **macaroon_path** | string | 🗸 | Path to the macaroon file. See [macaroon](#macaroon) |
+| **policies** | [][Policy](#policy) | X | Set of policies to enforce |
 
 ### Macaroon
 
