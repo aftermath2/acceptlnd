@@ -1,0 +1,14 @@
+# Accept all zero confirmation channel requests
+policies:
+  -
+    accept_zero_conf_channels: true
+
+--
+
+# Accept zero confirmation channel requests from a list of nodes only
+policies:
+  -
+    accept_zero_conf_channels: true
+    zero_conf_list:
+      - public_key_1
+      - public_key_2
