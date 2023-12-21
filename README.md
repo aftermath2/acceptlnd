@@ -48,11 +48,11 @@ Configuration schema:
 
 | Key | Type | Required | Description |
 | -- | -- | -- | -- |
-| **rpc_address** | string | ✔ | LND GRPC address (`host:port`) |
-| **rpc_timeout** | duration | ✖ | LND GRPC connection timeout. Valid units are {ms, s, m, h}. Use `0` for no timeout. Default: `60s` |
-| **certificate_path** | string | ✔ | Path to LND's TLS certificate |
-| **macaroon_path** | string | ✔ | Path to the macaroon file. See [macaroon](#macaroon) |
-| **policies** | [][Policy](#policy) | ✖ | Set of policies to enforce |
+| **rpc_address** | string | ✓ | LND GRPC address (`host:port`) |
+| **rpc_timeout** | duration | ☓ | LND GRPC connection timeout. Valid units are {ms, s, m, h}. Use `0` for no timeout. Default: `60s` |
+| **certificate_path** | string | ✓ | Path to LND's TLS certificate |
+| **macaroon_path** | string | ✓ | Path to the macaroon file. See [macaroon](#macaroon) |
+| **policies** | [][Policy](#policy) | ☓ | Set of policies to enforce |
 
 ### Macaroon
 
@@ -105,7 +105,7 @@ This policy only applies to private channels and will reject those that have a c
 
 ### Conditions
 
-Conditions are used to evaluate policies conditionally. When used, all of them must resolve to true or the policy is skipped.
+Conditions are used to evaluate policies conditionally. If they are specified, all of them must resolve to true or the policy is skipped.
 
 They are defined in the configuration exactly the same way policies are, only a few fields change.
 
