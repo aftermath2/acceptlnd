@@ -1,5 +1,6 @@
 policies:
-  - 
+  -
+    min_accept_depth: 6
     request:
       channel_capacity:
         min: 3_000_000

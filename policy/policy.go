@@ -21,6 +21,7 @@ type Policy struct {
 	RejectAll              *bool       `yaml:"reject_all,omitempty"`
 	RejectPrivateChannels  *bool       `yaml:"reject_private_channels,omitempty"`
 	AcceptZeroConfChannels *bool       `yaml:"accept_zero_conf_channels,omitempty"`
+	MinAcceptDepth         *uint32     `yaml:"min_accept_depth,omitempty"`
 }
 
 // Evaluate set of policies.

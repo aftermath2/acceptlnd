@@ -81,6 +81,7 @@ A policy would only be enforced if its conditions are satisfied, or if it has no
 | **accept_zero_conf_channels** | boolean | Whether to accept zero confirmation channels |
 | **zero_conf_list** | []string | List of nodes public keys whose zero conf requests will be accepted. Requires `accept_zero_conf_channels` to be `true` | 
 | **reject_private_channels** | boolean | Whether private channels should be rejected |
+| **min_accept_depth** | int | Number of confirmations required before considering the channel open |
 | **request** | [Request](#request) | Parameters related to the channel opening request |
 | **node** | [Node](#node) | Parameters related to the channel initiator |
 

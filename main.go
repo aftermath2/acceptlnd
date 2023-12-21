@@ -122,9 +122,15 @@ func handleRequest(
 		if err := policy.Evaluate(req, node, peer); err != nil {
 			return resp, err
 		}
+
+		if policy.MinAcceptDepth != nil {
+			resp.MinAcceptDepth = *policy.MinAcceptDepth
+		}
 	}
 
-	if req.WantsZeroConf {
+	if req.WantsZeroConf && len(config.Policies) != 0 {
+		// The initiator requested a zero conf channel and it was explicitly accepted, set the
+		// fields required to open it
 		resp.ZeroConf = true
 		resp.MinAcceptDepth = 0
 	}
