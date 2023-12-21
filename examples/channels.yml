@@ -7,11 +7,10 @@ policies:
           number:
             min: 10
             max: 50
-    policies:
-      request:
-        channel_capacity:
-          min: 1_000_000
-          max: 3_000_000
+    request:
+      channel_capacity:
+        min: 1_000_000
+        max: 3_000_000
 	-
     conditions:
       node:
@@ -19,18 +18,16 @@ policies:
           number:
             min: 50
             max: 200
-    policies:
-      request:
-        channel_capacity:
-          min: 3_000_000
-          max: 10_000_000
+    request:
+      channel_capacity:
+        min: 3_000_000
+        max: 10_000_000
 	-
     conditions:
       node:
         channels:
           number:
             min: 200
-    policies:
-      request:
-        channel_capacity:
-          min: 10_000_000
+    request:
+      channel_capacity:
+        min: 10_000_000
