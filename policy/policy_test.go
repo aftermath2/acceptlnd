@@ -38,7 +38,7 @@ func TestEvaluatePolicy(t *testing.T) {
 			desc: "Conditions match",
 			policy: Policy{
 				Conditions: &Conditions{
-					Whitelist: &[]string{peerPublicKey},
+					Is: &[]string{peerPublicKey},
 				},
 			},
 			req:  defaultReq,
@@ -49,7 +49,7 @@ func TestEvaluatePolicy(t *testing.T) {
 			desc: "No conditions match",
 			policy: Policy{
 				Conditions: &Conditions{
-					Blacklist: &[]string{peerPublicKey},
+					IsNot: &[]string{peerPublicKey},
 				},
 			},
 			req:  defaultReq,
@@ -57,18 +57,18 @@ func TestEvaluatePolicy(t *testing.T) {
 			fail: false,
 		},
 		{
-			desc: "Whitelist",
+			desc: "Allow list",
 			policy: Policy{
-				Whitelist: &[]string{"other_public_key"},
+				AllowList: &[]string{"other_public_key"},
 			},
 			req:  defaultReq,
 			peer: defaultPeer,
 			fail: true,
 		},
 		{
-			desc: "Blacklist",
+			desc: "Block list",
 			policy: Policy{
-				Blacklist: &[]string{peerPublicKey},
+				BlockList: &[]string{peerPublicKey},
 			},
 			req:  defaultReq,
 			peer: defaultPeer,
@@ -187,81 +187,81 @@ func TestCheckRejectAll(t *testing.T) {
 	})
 }
 
-func TestCheckWhitelist(t *testing.T) {
+func TestCheckAllowList(t *testing.T) {
 	publicKey := "key"
 
 	cases := []struct {
-		whitelist *[]string
+		list      *[]string
 		desc      string
 		publicKey string
 		expected  bool
 	}{
 		{
-			desc:      "Whitelisted",
+			desc:      "Allowed",
 			publicKey: publicKey,
-			whitelist: &[]string{publicKey},
+			list:      &[]string{publicKey},
 			expected:  true,
 		},
 		{
-			desc:      "Not whitelisted",
+			desc:      "Not allowed",
 			publicKey: "not key",
-			whitelist: &[]string{publicKey},
+			list:      &[]string{publicKey},
 			expected:  false,
 		},
 		{
-			desc:      "Nil",
-			whitelist: nil,
-			expected:  true,
+			desc:     "Empty list",
+			list:     nil,
+			expected: true,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			policy := Policy{
-				Whitelist: tc.whitelist,
+				AllowList: tc.list,
 			}
 
-			actual := policy.checkWhitelist(tc.publicKey)
+			actual := policy.checkAllowList(tc.publicKey)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
 
-func TestCheckBlacklist(t *testing.T) {
+func TestCheckBlockList(t *testing.T) {
 	publicKey := "key"
 
 	cases := []struct {
-		blacklist *[]string
+		list      *[]string
 		desc      string
 		publicKey string
 		expected  bool
 	}{
 		{
-			desc:      "Blacklisted",
+			desc:      "Blocked",
 			publicKey: publicKey,
-			blacklist: &[]string{publicKey},
+			list:      &[]string{publicKey},
 			expected:  false,
 		},
 		{
-			desc:      "Not blacklisted",
+			desc:      "Not blocked",
 			publicKey: "not key",
-			blacklist: &[]string{publicKey},
+			list:      &[]string{publicKey},
 			expected:  true,
 		},
 		{
-			desc:      "Nil",
-			blacklist: nil,
-			expected:  true,
+			desc:     "Nil",
+			list:     nil,
+			expected: true,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			policy := Policy{
-				Blacklist: tc.blacklist,
+				BlockList: tc.list,
 			}
 
-			actual := policy.checkBlacklist(tc.publicKey)
+			actual := policy.checkBlockList(tc.publicKey)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}

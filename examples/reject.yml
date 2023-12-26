@@ -6,7 +6,7 @@ policies:
 
 policies:
   -
-    blacklist:
+    block_list:
       - public_key_1
       - public_key_2
       - public_key_3

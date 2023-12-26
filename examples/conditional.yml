@@ -1,4 +1,11 @@
 policies:
+  - # Enforce policies depending on the node public key
+    conditions:
+      is:
+        - public_key_1
+        - public_key_2
+    request:
+      max_value_in_flight: 5_000_000
   - # Enforce policies on nodes with a capacity of 1 BTC or less
     conditions:
       node:
