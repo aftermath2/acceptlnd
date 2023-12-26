@@ -76,8 +76,8 @@ A policy would only be enforced if its conditions are satisfied, or if it has no
 | -- | -- | -- |
 | **conditions** | [Conditions](#conditions) | Set of conditions that must be met to enforce the policies |
 | **reject_all** | boolean | Reject all channel requests |
-| **whitelist** | []string | List of nodes public keys whose requests will be accepted |
-| **blacklist** | []string | List of nodes public keys whose requests will be rejected |
+| **allow_list** | []string | List of nodes public keys whose requests will be accepted |
+| **block_list** | []string | List of nodes public keys whose requests will be rejected |
 | **accept_zero_conf_channels** | boolean | Whether to accept zero confirmation channels |
 | **zero_conf_list** | []string | List of nodes public keys whose zero conf requests will be accepted. Requires `accept_zero_conf_channels` to be `true` | 
 | **reject_private_channels** | boolean | Whether private channels should be rejected |
@@ -112,8 +112,8 @@ They are defined in the configuration exactly the same way policies are, only a 
 
 | Name | Type | Description |
 | -- | -- | -- |
-| **whitelist** | []string | List of nodes public keys to which policies should be applied |
-| **blacklist** | []string | List of nodes public keys to which policies should not be applied |
+| **is** | []string | List of nodes public keys to which policies should be applied |
+| **is_not** | []string | List of nodes public keys to which policies should not be applied |
 | **is_private** | boolean | Match private channels |
 | **wants_zero_conf** | boolean | Match zero confirmation channels |
 | **request** | [Request](#request) | Parameters related to the channel opening request |

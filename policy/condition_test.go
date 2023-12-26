@@ -41,18 +41,18 @@ func TestMatch(t *testing.T) {
 			expected:   true,
 		},
 		{
-			desc: "Whitelist",
+			desc: "Is",
 			conditions: &Conditions{
-				Whitelist: &[]string{peerPublicKey},
+				Is: &[]string{peerPublicKey},
 			},
 			req:      defaultReq,
 			peer:     defaultPeer,
 			expected: true,
 		},
 		{
-			desc: "Blacklist",
+			desc: "Is not",
 			conditions: &Conditions{
-				Blacklist: &[]string{peerPublicKey},
+				IsNot: &[]string{peerPublicKey},
 			},
 			req:      defaultReq,
 			peer:     defaultPeer,
@@ -124,94 +124,94 @@ func TestMatch(t *testing.T) {
 	}
 }
 
-func TestConditionsCheckWhitelist(t *testing.T) {
+func TestConditionsCheckIs(t *testing.T) {
 	publicKey := "key"
 
 	cases := []struct {
+		list      *[]string
 		desc      string
 		publicKey string
-		whitelist []string
 		expected  bool
 	}{
 		{
-			desc:      "Whitelisted",
+			desc:      "Is",
 			publicKey: publicKey,
-			whitelist: []string{publicKey},
+			list:      &[]string{publicKey},
 			expected:  true,
 		},
 		{
-			desc:      "Not whitelisted",
+			desc:      "Isn't",
 			publicKey: "not key",
-			whitelist: []string{publicKey},
+			list:      &[]string{publicKey},
 			expected:  false,
 		},
 		{
-			desc:      "Empty whitelist",
-			whitelist: []string{},
-			expected:  false,
+			desc:     "Empty list",
+			list:     &[]string{},
+			expected: false,
+		},
+		{
+			desc:     "Nil list",
+			list:     nil,
+			expected: false,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			conditions := Conditions{
-				Whitelist: &tc.whitelist,
+				Is: tc.list,
 			}
 
-			actual := conditions.checkWhitelist(tc.publicKey)
+			actual := conditions.checkIs(tc.publicKey)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
-
-	t.Run("Nil", func(t *testing.T) {
-		conditions := Conditions{}
-		assert.False(t, conditions.checkWhitelist(""))
-	})
 }
 
-func TestConditionsCheckBlacklist(t *testing.T) {
+func TestConditionsCheckIsNot(t *testing.T) {
 	publicKey := "key"
 
 	cases := []struct {
+		list      *[]string
 		desc      string
 		publicKey string
-		blacklist []string
 		expected  bool
 	}{
 		{
-			desc:      "Blacklisted",
+			desc:      "In list",
 			publicKey: publicKey,
-			blacklist: []string{publicKey},
+			list:      &[]string{publicKey},
 			expected:  false,
 		},
 		{
-			desc:      "Not blacklisted",
+			desc:      "Not in list",
 			publicKey: "not key",
-			blacklist: []string{publicKey},
+			list:      &[]string{publicKey},
 			expected:  true,
 		},
 		{
-			desc:      "Empty blacklist",
-			blacklist: []string{},
-			expected:  true,
+			desc:     "Empty list",
+			list:     &[]string{},
+			expected: true,
+		},
+		{
+			desc:     "Nil list",
+			list:     nil,
+			expected: true,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			conditions := Conditions{
-				Blacklist: &tc.blacklist,
+				IsNot: tc.list,
 			}
 
-			actual := conditions.checkBlacklist(tc.publicKey)
+			actual := conditions.checkIsNot(tc.publicKey)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
-
-	t.Run("Nil", func(t *testing.T) {
-		conditions := Conditions{}
-		assert.True(t, conditions.checkBlacklist(""))
-	})
 }
 
 func TestConditionsCheckIsPrivate(t *testing.T) {

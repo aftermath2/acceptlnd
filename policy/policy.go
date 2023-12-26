@@ -15,8 +15,8 @@ type Policy struct {
 	Conditions             *Conditions `yaml:"conditions,omitempty"`
 	Request                *Request    `yaml:"request,omitempty"`
 	Node                   *Node       `yaml:"node,omitempty"`
-	Whitelist              *[]string   `yaml:"whitelist,omitempty"`
-	Blacklist              *[]string   `yaml:"blacklist,omitempty"`
+	AllowList              *[]string   `yaml:"allow_list,omitempty"`
+	BlockList              *[]string   `yaml:"block_list,omitempty"`
 	ZeroConfList           *[]string   `yaml:"zero_conf_list,omitempty"`
 	RejectAll              *bool       `yaml:"reject_all,omitempty"`
 	RejectPrivateChannels  *bool       `yaml:"reject_private_channels,omitempty"`
@@ -38,12 +38,12 @@ func (p *Policy) Evaluate(
 		return errors.New("No new channels are accepted")
 	}
 
-	if !p.checkWhitelist(peer.Node.PubKey) {
-		return errors.New("Node is not whitelisted")
+	if !p.checkAllowList(peer.Node.PubKey) {
+		return errors.New("Node is not allowed")
 	}
 
-	if !p.checkBlacklist(peer.Node.PubKey) {
-		return errors.New("Node is blacklisted")
+	if !p.checkBlockList(peer.Node.PubKey) {
+		return errors.New("Node is blocked")
 	}
 
 	if !p.checkPrivate(req.ChannelFlags != uint32(lnwire.FFAnnounceChannel)) {
@@ -68,12 +68,12 @@ func (p *Policy) checkRejectAll() bool {
 	return !*p.RejectAll
 }
 
-func (p *Policy) checkWhitelist(publicKey string) bool {
-	if p.Whitelist == nil {
+func (p *Policy) checkAllowList(publicKey string) bool {
+	if p.AllowList == nil {
 		return true
 	}
 
-	for _, pubKey := range *p.Whitelist {
+	for _, pubKey := range *p.AllowList {
 		if publicKey == pubKey {
 			return true
 		}
@@ -81,12 +81,12 @@ func (p *Policy) checkWhitelist(publicKey string) bool {
 	return false
 }
 
-func (p *Policy) checkBlacklist(publicKey string) bool {
-	if p.Blacklist == nil {
+func (p *Policy) checkBlockList(publicKey string) bool {
+	if p.BlockList == nil {
 		return true
 	}
 
-	for _, pubKey := range *p.Blacklist {
+	for _, pubKey := range *p.BlockList {
 		if publicKey == pubKey {
 			return false
 		}

@@ -9,8 +9,8 @@ import (
 type Conditions struct {
 	IsPrivate     *bool     `yaml:"is_private,omitempty"`
 	WantsZeroConf *bool     `yaml:"wants_zero_conf,omitempty"`
-	Whitelist     *[]string `yaml:"whitelist,omitempty"`
-	Blacklist     *[]string `yaml:"blacklist,omitempty"`
+	Is            *[]string `yaml:"is,omitempty"`
+	IsNot         *[]string `yaml:"is_not,omitempty"`
 	Request       *Request  `yaml:"request,omitempty"`
 	Node          *Node     `yaml:"node,omitempty"`
 }
@@ -25,11 +25,11 @@ func (c *Conditions) Match(
 		return true
 	}
 
-	if c.checkWhitelist(peer.Node.PubKey) {
+	if c.checkIs(peer.Node.PubKey) {
 		return true
 	}
 
-	if !c.checkBlacklist(peer.Node.PubKey) {
+	if !c.checkIsNot(peer.Node.PubKey) {
 		return false
 	}
 
@@ -52,12 +52,12 @@ func (c *Conditions) Match(
 	return true
 }
 
-func (c *Conditions) checkWhitelist(publicKey string) bool {
-	if c.Whitelist == nil {
+func (c *Conditions) checkIs(publicKey string) bool {
+	if c.Is == nil {
 		return false
 	}
 
-	for _, pubKey := range *c.Whitelist {
+	for _, pubKey := range *c.Is {
 		if publicKey == pubKey {
 			return true
 		}
@@ -65,12 +65,12 @@ func (c *Conditions) checkWhitelist(publicKey string) bool {
 	return false
 }
 
-func (c *Conditions) checkBlacklist(publicKey string) bool {
-	if c.Blacklist == nil {
+func (c *Conditions) checkIsNot(publicKey string) bool {
+	if c.IsNot == nil {
 		return true
 	}
 
-	for _, pubKey := range *c.Blacklist {
+	for _, pubKey := range *c.IsNot {
 		if publicKey == pubKey {
 			return false
 		}
