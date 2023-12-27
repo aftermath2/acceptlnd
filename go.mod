@@ -15,10 +15,10 @@ require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/aead/siphash v1.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/btcsuite/btcd v0.23.5-0.20231219003633-4c2ce6daed8f // indirect
+	github.com/btcsuite/btcd v0.23.5-0.20230905170901-80f5a0ffdf36 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
-	github.com/btcsuite/btcd/btcutil v1.1.4 // indirect
-	github.com/btcsuite/btcd/btcutil/psbt v1.1.9 // indirect
+	github.com/btcsuite/btcd/btcutil v1.1.4-0.20230904040416-d4f519f5dc05 // indirect
+	github.com/btcsuite/btcd/btcutil/psbt v1.1.8 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
 	github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f // indirect
 	github.com/btcsuite/btcwallet v0.16.10-0.20231129183218-5df09dd43358 // indirect
