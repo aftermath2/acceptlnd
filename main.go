@@ -105,7 +105,7 @@ func handleRequest(
 
 	node, err := client.GetInfo(ctx, &lnrpc.GetInfoRequest{})
 	if err != nil {
-		return resp, errors.Wrap(err, "getting node information")
+		return resp, errors.New("Internal server error")
 	}
 
 	getPeerInfoReq := &lnrpc.NodeInfoRequest{
@@ -119,20 +119,9 @@ func handleRequest(
 	slog.Debug("Peer node information", slog.Any("node", peer))
 
 	for _, policy := range config.Policies {
-		if err := policy.Evaluate(req, node, peer); err != nil {
+		if err := policy.Evaluate(req, resp, node, peer); err != nil {
 			return resp, err
 		}
-
-		if policy.MinAcceptDepth != nil {
-			resp.MinAcceptDepth = *policy.MinAcceptDepth
-		}
-	}
-
-	if req.WantsZeroConf && len(config.Policies) != 0 {
-		// The initiator requested a zero conf channel and it was explicitly accepted, set the
-		// fields required to open it
-		resp.ZeroConf = true
-		resp.MinAcceptDepth = 0
 	}
 
 	return resp, nil

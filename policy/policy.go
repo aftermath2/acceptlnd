@@ -27,11 +27,16 @@ type Policy struct {
 // Evaluate set of policies.
 func (p *Policy) Evaluate(
 	req *lnrpc.ChannelAcceptRequest,
+	resp *lnrpc.ChannelAcceptResponse,
 	node *lnrpc.GetInfoResponse,
 	peer *lnrpc.NodeInfo,
 ) error {
 	if p.Conditions != nil && !p.Conditions.Match(req, node, peer) {
 		return nil
+	}
+
+	if p.MinAcceptDepth != nil {
+		resp.MinAcceptDepth = *p.MinAcceptDepth
 	}
 
 	if !p.checkRejectAll() {
@@ -50,7 +55,7 @@ func (p *Policy) Evaluate(
 		return errors.New("Private channels are not accepted")
 	}
 
-	if !p.checkZeroConf(peer.Node.PubKey, req.WantsZeroConf) {
+	if !p.checkZeroConf(peer.Node.PubKey, req.WantsZeroConf, resp) {
 		return errors.New("Zero conf channels are not accepted")
 	}
 
@@ -101,7 +106,11 @@ func (p *Policy) checkPrivate(private bool) bool {
 	return private && !*p.RejectPrivateChannels
 }
 
-func (p *Policy) checkZeroConf(publicKey string, wantsZeroConf bool) bool {
+func (p *Policy) checkZeroConf(
+	publicKey string,
+	wantsZeroConf bool,
+	resp *lnrpc.ChannelAcceptResponse,
+) bool {
 	if !wantsZeroConf {
 		return true
 	}
@@ -110,15 +119,18 @@ func (p *Policy) checkZeroConf(publicKey string, wantsZeroConf bool) bool {
 		return false
 	}
 
-	if p.ZeroConfList != nil {
-		for _, pubKey := range *p.ZeroConfList {
-			if publicKey == pubKey {
-				return true
-			}
-		}
+	resp.ZeroConf = true
+	resp.MinAcceptDepth = 0
 
-		return false
+	if p.ZeroConfList == nil {
+		return true
 	}
 
-	return true
+	for _, pubKey := range *p.ZeroConfList {
+		if publicKey == pubKey {
+			return true
+		}
+	}
+
+	return false
 }
