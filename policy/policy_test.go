@@ -19,6 +19,7 @@ func TestEvaluatePolicy(t *testing.T) {
 	tru := true
 	fals := false
 	max := uint64(1)
+	depth := uint32(10)
 
 	cases := []struct {
 		policy Policy
@@ -138,11 +139,20 @@ func TestEvaluatePolicy(t *testing.T) {
 			},
 			fail: true,
 		},
+		{
+			desc: "Min accept depth",
+			policy: Policy{
+				MinAcceptDepth: &depth,
+			},
+			req:  defaultReq,
+			peer: defaultPeer,
+			fail: false,
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := tc.policy.Evaluate(tc.req, node, tc.peer)
+			err := tc.policy.Evaluate(tc.req, &lnrpc.ChannelAcceptResponse{}, node, tc.peer)
 			if tc.fail {
 				assert.NotNil(t, err)
 			} else {
@@ -150,6 +160,25 @@ func TestEvaluatePolicy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMinAcceptDepth(t *testing.T) {
+	n := uint32(2)
+	policy := Policy{
+		MinAcceptDepth: &n,
+	}
+	resp := &lnrpc.ChannelAcceptResponse{}
+	node := &lnrpc.NodeInfo{Node: &lnrpc.LightningNode{PubKey: ""}}
+
+	err := policy.Evaluate(
+		&lnrpc.ChannelAcceptRequest{},
+		resp,
+		&lnrpc.GetInfoResponse{},
+		node,
+	)
+	assert.NoError(t, err)
+
+	assert.Equal(t, n, resp.MinAcceptDepth)
 }
 
 func TestCheckRejectAll(t *testing.T) {
@@ -373,8 +402,14 @@ func TestCheckZeroConf(t *testing.T) {
 				ZeroConfList:           tc.zeroConfList,
 			}
 
-			actual := policy.checkZeroConf(tc.publicKey, tc.wantsZeroConf)
+			resp := &lnrpc.ChannelAcceptResponse{}
+			actual := policy.checkZeroConf(tc.publicKey, tc.wantsZeroConf, resp)
 			assert.Equal(t, tc.expected, actual)
+
+			if tc.wantsZeroConf && tc.expected {
+				assert.True(t, resp.ZeroConf)
+				assert.Zero(t, resp.MinAcceptDepth)
+			}
 		})
 	}
 }
