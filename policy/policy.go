@@ -22,6 +22,7 @@ type Policy struct {
 	RejectPrivateChannels  *bool       `yaml:"reject_private_channels,omitempty"`
 	AcceptZeroConfChannels *bool       `yaml:"accept_zero_conf_channels,omitempty"`
 	MinAcceptDepth         *uint32     `yaml:"min_accept_depth,omitempty"`
+	MaxChannels            *uint32     `yaml:"max_channels,omitempty"`
 }
 
 // Evaluate set of policies.
@@ -57,6 +58,11 @@ func (p *Policy) Evaluate(
 
 	if !p.checkZeroConf(peer.Node.PubKey, req.WantsZeroConf, resp) {
 		return errors.New("Zero conf channels are not accepted")
+	}
+
+	numChannels := node.NumActiveChannels + node.NumInactiveChannels + node.NumPendingChannels
+	if !p.checkMaxChannels(numChannels) {
+		return errors.New("Maximum number of channels reached")
 	}
 
 	if err := p.Request.evaluate(req); err != nil {
@@ -97,6 +103,13 @@ func (p *Policy) checkBlockList(publicKey string) bool {
 		}
 	}
 	return true
+}
+
+func (p *Policy) checkMaxChannels(numChannels uint32) bool {
+	if p.MaxChannels == nil {
+		return true
+	}
+	return numChannels < *p.MaxChannels
 }
 
 func (p *Policy) checkPrivate(private bool) bool {
