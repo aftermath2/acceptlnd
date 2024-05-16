@@ -1,11 +1,9 @@
 rpc_address: 127.0.0.1:10001
 certificate_path: tls.cert
 macaroon_path: acceptlnd.macaroon
-rpc_timeout: 1m30s
 
 --
 
 rpc_address: 127.0.0.1:10001
 certificate_path: /home/username/tls.cert
 macaroon_path: /home/username/acceptlnd.macaroon
-rpc_timeout: 90s

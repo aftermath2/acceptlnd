@@ -2,7 +2,6 @@ package config
 
 import (
 	"testing"
-	"time"
 
 	"github.com/aftermath2/acceptlnd/policy"
 
@@ -51,7 +50,6 @@ func TestLoad(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	tru := true
-	timeout := 40 * time.Second
 
 	cases := []struct {
 		desc   string
@@ -62,7 +60,6 @@ func TestValidate(t *testing.T) {
 			desc: "Valid",
 			config: Config{
 				RPCAddress:      "127.0.0.1:10001",
-				RPCTimeout:      &timeout,
 				CertificatePath: "./testdata/tls.mock",
 				MacaroonPath:    "./testdata/acceptlnd.mock",
 				Policies: []*policy.Policy{
