@@ -8,7 +8,6 @@ import (
 )
 
 func TestEvaluatePolicy(t *testing.T) {
-	node := &lnrpc.GetInfoResponse{IdentityPubkey: "node_public_key"}
 	peerPublicKey := "peer_public_key"
 	defaultReq := &lnrpc.ChannelAcceptRequest{}
 	defaultPeer := &lnrpc.NodeInfo{
@@ -20,19 +19,19 @@ func TestEvaluatePolicy(t *testing.T) {
 	fals := false
 	max := uint64(1)
 	depth := uint32(10)
+	maxChannels := uint32(50)
 
 	cases := []struct {
 		policy Policy
 		req    *lnrpc.ChannelAcceptRequest
 		peer   *lnrpc.NodeInfo
+		node   *lnrpc.GetInfoResponse
 		desc   string
 		fail   bool
 	}{
 		{
 			desc:   "No policy",
 			policy: Policy{},
-			req:    defaultReq,
-			peer:   defaultPeer,
 			fail:   false,
 		},
 		{
@@ -42,8 +41,6 @@ func TestEvaluatePolicy(t *testing.T) {
 					Is: &[]string{peerPublicKey},
 				},
 			},
-			req:  defaultReq,
-			peer: defaultPeer,
 			fail: false,
 		},
 		{
@@ -53,8 +50,6 @@ func TestEvaluatePolicy(t *testing.T) {
 					IsNot: &[]string{peerPublicKey},
 				},
 			},
-			req:  defaultReq,
-			peer: defaultPeer,
 			fail: false,
 		},
 		{
@@ -62,8 +57,6 @@ func TestEvaluatePolicy(t *testing.T) {
 			policy: Policy{
 				AllowList: &[]string{"other_public_key"},
 			},
-			req:  defaultReq,
-			peer: defaultPeer,
 			fail: true,
 		},
 		{
@@ -71,8 +64,6 @@ func TestEvaluatePolicy(t *testing.T) {
 			policy: Policy{
 				BlockList: &[]string{peerPublicKey},
 			},
-			req:  defaultReq,
-			peer: defaultPeer,
 			fail: true,
 		},
 		{
@@ -80,8 +71,6 @@ func TestEvaluatePolicy(t *testing.T) {
 			policy: Policy{
 				RejectAll: &tru,
 			},
-			req:  defaultReq,
-			peer: defaultPeer,
 			fail: true,
 		},
 		{
@@ -92,7 +81,6 @@ func TestEvaluatePolicy(t *testing.T) {
 			req: &lnrpc.ChannelAcceptRequest{
 				ChannelFlags: 0,
 			},
-			peer: defaultPeer,
 			fail: true,
 		},
 		{
@@ -103,7 +91,18 @@ func TestEvaluatePolicy(t *testing.T) {
 			req: &lnrpc.ChannelAcceptRequest{
 				WantsZeroConf: true,
 			},
-			peer: defaultPeer,
+			fail: true,
+		},
+		{
+			desc: "Maximum number of channels",
+			policy: Policy{
+				MaxChannels: &maxChannels,
+			},
+			node: &lnrpc.GetInfoResponse{
+				NumActiveChannels:   40,
+				NumPendingChannels:  5,
+				NumInactiveChannels: 10,
+			},
 			fail: true,
 		},
 		{
@@ -118,7 +117,6 @@ func TestEvaluatePolicy(t *testing.T) {
 			req: &lnrpc.ChannelAcceptRequest{
 				FundingAmt: 10_000,
 			},
-			peer: defaultPeer,
 			fail: true,
 		},
 		{
@@ -144,15 +142,23 @@ func TestEvaluatePolicy(t *testing.T) {
 			policy: Policy{
 				MinAcceptDepth: &depth,
 			},
-			req:  defaultReq,
-			peer: defaultPeer,
 			fail: false,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := tc.policy.Evaluate(tc.req, &lnrpc.ChannelAcceptResponse{}, node, tc.peer)
+			if tc.req == nil {
+				tc.req = defaultReq
+			}
+			if tc.peer == nil {
+				tc.peer = defaultPeer
+			}
+			if tc.node == nil {
+				tc.node = &lnrpc.GetInfoResponse{IdentityPubkey: "node_public_key"}
+			}
+
+			err := tc.policy.Evaluate(tc.req, &lnrpc.ChannelAcceptResponse{}, tc.node, tc.peer)
 			if tc.fail {
 				assert.NotNil(t, err)
 			} else {
