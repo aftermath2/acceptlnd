@@ -1,5 +1,4 @@
 rpc_address: 127.0.0.1:10001
-rpc_timeout: 120s
 certificate_path: ./testdata/tls.mock
 macaroon_path: ./testdata/acceptlnd.mock
 policies:

@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"net"
 	"os"
-	"time"
 
 	"github.com/aftermath2/acceptlnd/policy"
 
@@ -15,7 +14,6 @@ import (
 // Config is acceptLND's configuration schema.
 type Config struct {
 	RPCAddress      string           `yaml:"rpc_address,omitempty"`
-	RPCTimeout      *time.Duration   `yaml:"rpc_timeout,omitempty"`
 	CertificatePath string           `yaml:"certificate_path,omitempty"`
 	MacaroonPath    string           `yaml:"macaroon_path,omitempty"`
 	Policies        []*policy.Policy `yaml:"policies,omitempty"`

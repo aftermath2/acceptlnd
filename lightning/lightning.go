@@ -6,7 +6,6 @@ import (
 	"context"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/aftermath2/acceptlnd/config"
 
@@ -32,23 +31,8 @@ func NewClient(config config.Config) (Client, error) {
 		return nil, errors.Wrap(err, "loading GRPC options")
 	}
 
-	if config.RPCTimeout == nil {
-		defaultTimeout := 60 * time.Second
-		config.RPCTimeout = &defaultTimeout
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), *config.RPCTimeout)
-	defer cancel()
-
-	if *config.RPCTimeout == 0 {
-		ctx = context.Background()
-	}
-
-	slog.Info("Connecting to LND",
-		slog.String("address", config.RPCAddress),
-		slog.String("timeout", config.RPCTimeout.String()),
-	)
-	conn, err := grpc.DialContext(ctx, config.RPCAddress, opts...)
+	slog.Info("Connecting to LND", slog.String("address", config.RPCAddress))
+	conn, err := grpc.NewClient(config.RPCAddress, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -72,14 +56,13 @@ func loadGRPCOpts(config config.Config) ([]grpc.DialOption, error) {
 		return nil, errors.Wrap(err, "unmarshaling macaroon")
 	}
 
-	macaroon, err := macaroons.NewMacaroonCredential(mac)
+	macCred, err := macaroons.NewMacaroonCredential(mac)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating macaroon credential")
 	}
 
 	return []grpc.DialOption{
-		grpc.WithBlock(),
 		grpc.WithTransportCredentials(tlsCert),
-		grpc.WithPerRPCCredentials(macaroon),
+		grpc.WithPerRPCCredentials(macCred),
 	}, nil
 }
