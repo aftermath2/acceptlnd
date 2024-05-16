@@ -49,7 +49,6 @@ Configuration schema:
 | Key | Type | Required | Description |
 | -- | -- | -- | -- |
 | **rpc_address** | string | 🗸 | LND GRPC address (`host:port`) |
-| **rpc_timeout** | duration | X | LND GRPC connection timeout. Valid units are {ms, s, m, h}. Use `0` for no timeout. Default: `60s` |
 | **certificate_path** | string | 🗸 | Path to LND's TLS certificate |
 | **macaroon_path** | string | 🗸 | Path to the macaroon file. See [macaroon](#macaroon) |
 | **policies** | [][Policy](#policy) | X | Set of policies to enforce |
@@ -72,7 +71,7 @@ Policies define a set of requirements that must be met for a request to be accep
 
 A policy would only be enforced if its conditions are satisfied, or if it has no conditions.
 
-| Name | Type | Description |
+| Key | Type | Description |
 | -- | -- | -- |
 | **conditions** | [Conditions](#conditions) | Set of conditions that must be met to enforce the policies |
 | **reject_all** | boolean | Reject all channel requests |
@@ -110,7 +109,7 @@ Conditions are used to evaluate policies conditionally. If they are specified, a
 
 They are defined in the configuration exactly the same way policies are, only a few fields change.
 
-| Name | Type | Description |
+| Key | Type | Description |
 | -- | -- | -- |
 | **is** | []string | List of nodes public keys to which policies should be applied |
 | **is_not** | []string | List of nodes public keys to which policies should not be applied |
@@ -123,7 +122,7 @@ They are defined in the configuration exactly the same way policies are, only a 
 
 Parameters related to the channel opening request.
 
-| Name | Type | Description |
+| Key | Type | Description |
 | -- | -- | -- |
 | **channel_capacity** | range | Requested channel size |
 | **channel_reserve** | range | Requested channel reserve |
@@ -139,7 +138,7 @@ Parameters related to the channel opening request.
 
 Parameters related to the node that is initiating the channel.
 
-| Name | Type | Description |
+| Key | Type | Description |
 | -- | -- | -- |
 | **age** | range | Peer node age in blocks, based on the oldest announced channel |
 | **capacity** | range | Peer node capacity |
@@ -151,7 +150,7 @@ Parameters related to the node that is initiating the channel.
 
 Parameters related to the initiator node's channels.
 
-| Name | Type | Description |
+| Key | Type | Description |
 | -- | -- | -- |
 | **number** | range | Peer's number of channels |
 | **capacity** | stat_range | Channels size |
