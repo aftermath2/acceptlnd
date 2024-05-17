@@ -11,6 +11,7 @@ func TestEvaluateChannels(t *testing.T) {
 	nodePublicKey := "node_public_key"
 	peerPublicKey := "peer_public_key"
 	maxu32 := uint32(1)
+	max32 := int32(1)
 	max64 := int64(1)
 	maxu64 := uint64(1)
 	max := 1
@@ -231,7 +232,7 @@ func TestEvaluateChannels(t *testing.T) {
 					{
 						Node1Pub: peerPublicKey,
 						Node2Policy: &lnrpc.RoutingPolicy{
-							FeeRateMilliMsat: 10,
+							FeeRateMilliMsat: 10000,
 						},
 					},
 				},
@@ -253,7 +254,7 @@ func TestEvaluateChannels(t *testing.T) {
 					{
 						Node1Pub: peerPublicKey,
 						Node1Policy: &lnrpc.RoutingPolicy{
-							FeeRateMilliMsat: 10,
+							FeeRateMilliMsat: 10000,
 						},
 					},
 				},
@@ -342,6 +343,94 @@ func TestEvaluateChannels(t *testing.T) {
 						Node1Pub: peerPublicKey,
 						Node1Policy: &lnrpc.RoutingPolicy{
 							Disabled: true,
+						},
+					},
+				},
+			},
+			fail: true,
+		},
+		{
+			desc: "Incoming inbound fee rates",
+			channels: &Channels{
+				IncomingInboundFeeRates: &StatRange[int32]{
+					Max: &max32,
+				},
+			},
+			peer: &lnrpc.NodeInfo{
+				Node: &lnrpc.LightningNode{
+					PubKey: peerPublicKey,
+				},
+				Channels: []*lnrpc.ChannelEdge{
+					{
+						Node1Pub: peerPublicKey,
+						Node2Policy: &lnrpc.RoutingPolicy{
+							InboundFeeRateMilliMsat: 10000,
+						},
+					},
+				},
+			},
+			fail: true,
+		},
+		{
+			desc: "Outgoing inbound fee rates",
+			channels: &Channels{
+				OutgoingInboundFeeRates: &StatRange[int32]{
+					Max: &max32,
+				},
+			},
+			peer: &lnrpc.NodeInfo{
+				Node: &lnrpc.LightningNode{
+					PubKey: peerPublicKey,
+				},
+				Channels: []*lnrpc.ChannelEdge{
+					{
+						Node1Pub: peerPublicKey,
+						Node1Policy: &lnrpc.RoutingPolicy{
+							InboundFeeRateMilliMsat: 10000,
+						},
+					},
+				},
+			},
+			fail: true,
+		},
+		{
+			desc: "Incoming inbound base fees",
+			channels: &Channels{
+				IncomingInboundBaseFees: &StatRange[int32]{
+					Max: &max32,
+				},
+			},
+			peer: &lnrpc.NodeInfo{
+				Node: &lnrpc.LightningNode{
+					PubKey: peerPublicKey,
+				},
+				Channels: []*lnrpc.ChannelEdge{
+					{
+						Node1Pub: peerPublicKey,
+						Node2Policy: &lnrpc.RoutingPolicy{
+							InboundFeeBaseMsat: 2000,
+						},
+					},
+				},
+			},
+			fail: true,
+		},
+		{
+			desc: "Outgoing inbound base fees",
+			channels: &Channels{
+				OutgoingInboundBaseFees: &StatRange[int32]{
+					Max: &max32,
+				},
+			},
+			peer: &lnrpc.NodeInfo{
+				Node: &lnrpc.LightningNode{
+					PubKey: peerPublicKey,
+				},
+				Channels: []*lnrpc.ChannelEdge{
+					{
+						Node1Pub: peerPublicKey,
+						Node1Policy: &lnrpc.RoutingPolicy{
+							InboundFeeBaseMsat: 2000,
 						},
 					},
 				},
@@ -981,11 +1070,11 @@ func TestLastUpdateFunc(t *testing.T) {
 
 func TestFeeRatesFunc(t *testing.T) {
 	t.Run("Incoming", func(t *testing.T) {
-		expected := int64(100)
+		expected := int64(1)
 		peer := &lnrpc.NodeInfo{Node: &lnrpc.LightningNode{}}
 		channel := &lnrpc.ChannelEdge{
 			Node2Pub:    "pub",
-			Node2Policy: &lnrpc.RoutingPolicy{FeeRateMilliMsat: expected},
+			Node2Policy: &lnrpc.RoutingPolicy{FeeRateMilliMsat: expected * 1000},
 		}
 		actual := feeRatesFunc(peer, false)(channel)
 		assert.Equal(t, expected, actual)
@@ -993,13 +1082,13 @@ func TestFeeRatesFunc(t *testing.T) {
 
 	t.Run("Outgoing", func(t *testing.T) {
 		publicKey := "public_key"
-		expected := int64(50)
+		expected := int64(5)
 		peer := &lnrpc.NodeInfo{
 			Node: &lnrpc.LightningNode{PubKey: publicKey},
 		}
 		channel := &lnrpc.ChannelEdge{
 			Node1Pub:    publicKey,
-			Node1Policy: &lnrpc.RoutingPolicy{FeeRateMilliMsat: expected},
+			Node1Policy: &lnrpc.RoutingPolicy{FeeRateMilliMsat: expected * 1000},
 		}
 		actual := feeRatesFunc(peer, true)(channel)
 		assert.Equal(t, expected, actual)
@@ -1008,7 +1097,7 @@ func TestFeeRatesFunc(t *testing.T) {
 
 func TestBaseFeesFunc(t *testing.T) {
 	t.Run("Incoming", func(t *testing.T) {
-		expected := int64(0)
+		expected := int64(3)
 		peer := &lnrpc.NodeInfo{Node: &lnrpc.LightningNode{}}
 		channel := &lnrpc.ChannelEdge{
 			Node2Pub:    "pub",
@@ -1029,6 +1118,60 @@ func TestBaseFeesFunc(t *testing.T) {
 			Node1Policy: &lnrpc.RoutingPolicy{FeeBaseMsat: expected * 1000},
 		}
 		actual := baseFeesFunc(peer, true)(channel)
+		assert.Equal(t, expected, actual)
+	})
+}
+
+func TestInboundFeeRatesFunc(t *testing.T) {
+	t.Run("Incoming", func(t *testing.T) {
+		expected := int32(1)
+		peer := &lnrpc.NodeInfo{Node: &lnrpc.LightningNode{}}
+		channel := &lnrpc.ChannelEdge{
+			Node2Pub:    "pub",
+			Node2Policy: &lnrpc.RoutingPolicy{InboundFeeRateMilliMsat: expected * 1000},
+		}
+		actual := inboundFeeRatesFunc(peer, false)(channel)
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("Outgoing", func(t *testing.T) {
+		publicKey := "public_key"
+		expected := int32(5)
+		peer := &lnrpc.NodeInfo{
+			Node: &lnrpc.LightningNode{PubKey: publicKey},
+		}
+		channel := &lnrpc.ChannelEdge{
+			Node1Pub:    publicKey,
+			Node1Policy: &lnrpc.RoutingPolicy{InboundFeeRateMilliMsat: expected * 1000},
+		}
+		actual := inboundFeeRatesFunc(peer, true)(channel)
+		assert.Equal(t, expected, actual)
+	})
+}
+
+func TestInboundBaseFeesFunc(t *testing.T) {
+	t.Run("Incoming", func(t *testing.T) {
+		expected := int32(1)
+		peer := &lnrpc.NodeInfo{Node: &lnrpc.LightningNode{}}
+		channel := &lnrpc.ChannelEdge{
+			Node2Pub:    "pub",
+			Node2Policy: &lnrpc.RoutingPolicy{InboundFeeBaseMsat: expected * 1000},
+		}
+		actual := inboundBaseFeesFunc(peer, false)(channel)
+		assert.Equal(t, expected, actual)
+	})
+
+	t.Run("Outgoing", func(t *testing.T) {
+		publicKey := "public_key"
+		expected := int32(1)
+		peer := &lnrpc.NodeInfo{
+			Node: &lnrpc.LightningNode{PubKey: publicKey},
+		}
+		channel := &lnrpc.ChannelEdge{
+			Node1Pub:    publicKey,
+			Node1Policy: &lnrpc.RoutingPolicy{InboundFeeBaseMsat: expected * 1000},
+		}
+		actual := inboundBaseFeesFunc(peer, true)(channel)
 		assert.Equal(t, expected, actual)
 	})
 }
