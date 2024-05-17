@@ -51,19 +51,19 @@ func (c *Channels) evaluate(nodePublicKey string, peer *lnrpc.NodeInfo) error {
 		return errors.New("Block height " + c.BlockHeight.Reason())
 	}
 
-	if !checkStat(c.TimeLockDelta, peer, timeLockDeltaFunc(peer)) {
+	if !checkStat(c.TimeLockDelta, peer, timeLockDeltaFunc()) {
 		return errors.New("Time lock delta " + c.TimeLockDelta.Reason())
 	}
 
-	if !checkStat(c.MinHTLC, peer, minHTLCFunc(peer)) {
+	if !checkStat(c.MinHTLC, peer, minHTLCFunc()) {
 		return errors.New("Channels minimum HTLC " + c.MinHTLC.Reason())
 	}
 
-	if !checkStat(c.MaxHTLC, peer, maxHTLCFunc(peer)) {
+	if !checkStat(c.MaxHTLC, peer, maxHTLCFunc()) {
 		return errors.New("Channels maximum HTLC " + c.MaxHTLC.Reason())
 	}
 
-	if !checkStat(c.LastUpdateDiff, peer, lastUpdateFunc(peer, time.Now().Unix())) {
+	if !checkStat(c.LastUpdateDiff, peer, lastUpdateFunc(time.Now().Unix())) {
 		return errors.New("Channels last update " + c.LastUpdateDiff.Reason())
 	}
 
@@ -71,35 +71,35 @@ func (c *Channels) evaluate(nodePublicKey string, peer *lnrpc.NodeInfo) error {
 		return errors.New("Channels together " + c.Together.Reason())
 	}
 
-	if !checkStat(c.IncomingFeeRates, peer, feeRatesFunc(peer, false)) {
+	if !checkStat(c.IncomingFeeRates, peer, feeRatesFunc(false)) {
 		return errors.New("Incoming fee rates " + c.IncomingFeeRates.Reason())
 	}
 
-	if !checkStat(c.OutgoingFeeRates, peer, feeRatesFunc(peer, true)) {
+	if !checkStat(c.OutgoingFeeRates, peer, feeRatesFunc(true)) {
 		return errors.New("Outgoing fee rates " + c.OutgoingFeeRates.Reason())
 	}
 
-	if !checkStat(c.IncomingBaseFees, peer, baseFeesFunc(peer, false)) {
+	if !checkStat(c.IncomingBaseFees, peer, baseFeesFunc(false)) {
 		return errors.New("Incoming base fees " + c.IncomingBaseFees.Reason())
 	}
 
-	if !checkStat(c.OutgoingBaseFees, peer, baseFeesFunc(peer, true)) {
+	if !checkStat(c.OutgoingBaseFees, peer, baseFeesFunc(true)) {
 		return errors.New("Outgoing base fees " + c.OutgoingBaseFees.Reason())
 	}
 
-	if !checkStat(c.IncomingInboundFeeRates, peer, inboundFeeRatesFunc(peer, false)) {
+	if !checkStat(c.IncomingInboundFeeRates, peer, inboundFeeRatesFunc(false)) {
 		return errors.New("Incoming inbound fee rates " + c.IncomingInboundFeeRates.Reason())
 	}
 
-	if !checkStat(c.OutgoingInboundFeeRates, peer, inboundFeeRatesFunc(peer, true)) {
+	if !checkStat(c.OutgoingInboundFeeRates, peer, inboundFeeRatesFunc(true)) {
 		return errors.New("Outgoing inbound fee rates " + c.OutgoingInboundFeeRates.Reason())
 	}
 
-	if !checkStat(c.IncomingInboundBaseFees, peer, inboundBaseFeesFunc(peer, false)) {
+	if !checkStat(c.IncomingInboundBaseFees, peer, inboundBaseFeesFunc(false)) {
 		return errors.New("Incoming inbound base fees " + c.IncomingInboundBaseFees.Reason())
 	}
 
-	if !checkStat(c.OutgoingInboundBaseFees, peer, inboundBaseFeesFunc(peer, true)) {
+	if !checkStat(c.OutgoingInboundBaseFees, peer, inboundBaseFeesFunc(true)) {
 		return errors.New("Outgoing inbound base fees " + c.OutgoingInboundBaseFees.Reason())
 	}
 
@@ -194,65 +194,65 @@ func getNodePolicy(peerPublicKey string, channel *lnrpc.ChannelEdge, outgoing bo
 	return channel.Node2Policy
 }
 
-func capacityFunc(channel *lnrpc.ChannelEdge) int64 {
+func capacityFunc(_ *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) int64 {
 	return channel.Capacity
 }
 
-func blockHeightFunc(channel *lnrpc.ChannelEdge) uint32 {
+func blockHeightFunc(_ *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) uint32 {
 	return uint32(channel.ChannelId >> 40)
 }
 
-func timeLockDeltaFunc(peer *lnrpc.NodeInfo) channelFunc[uint32] {
-	return func(channel *lnrpc.ChannelEdge) uint32 {
+func timeLockDeltaFunc() channelFunc[uint32] {
+	return func(peer *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) uint32 {
 		policy := getNodePolicy(peer.Node.PubKey, channel, true)
 		return policy.TimeLockDelta
 	}
 }
 
-func minHTLCFunc(peer *lnrpc.NodeInfo) channelFunc[int64] {
-	return func(channel *lnrpc.ChannelEdge) int64 {
+func minHTLCFunc() channelFunc[int64] {
+	return func(peer *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) int64 {
 		policy := getNodePolicy(peer.Node.PubKey, channel, true)
 		return policy.MinHtlc
 	}
 }
 
-func maxHTLCFunc(peer *lnrpc.NodeInfo) channelFunc[uint64] {
-	return func(channel *lnrpc.ChannelEdge) uint64 {
+func maxHTLCFunc() channelFunc[uint64] {
+	return func(peer *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) uint64 {
 		policy := getNodePolicy(peer.Node.PubKey, channel, true)
 		return policy.MaxHtlcMsat / 1000
 	}
 }
 
-func lastUpdateFunc(peer *lnrpc.NodeInfo, now int64) channelFunc[uint32] {
-	return func(channel *lnrpc.ChannelEdge) uint32 {
+func lastUpdateFunc(now int64) channelFunc[uint32] {
+	return func(peer *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) uint32 {
 		policy := getNodePolicy(peer.Node.PubKey, channel, true)
 		return uint32(now) - policy.LastUpdate
 	}
 }
 
-func feeRatesFunc(peer *lnrpc.NodeInfo, outgoing bool) channelFunc[int64] {
-	return func(channel *lnrpc.ChannelEdge) int64 {
+func feeRatesFunc(outgoing bool) channelFunc[int64] {
+	return func(peer *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) int64 {
 		policy := getNodePolicy(peer.Node.PubKey, channel, outgoing)
 		return policy.FeeRateMilliMsat / 1000
 	}
 }
 
-func baseFeesFunc(peer *lnrpc.NodeInfo, outgoing bool) channelFunc[int64] {
-	return func(channel *lnrpc.ChannelEdge) int64 {
+func baseFeesFunc(outgoing bool) channelFunc[int64] {
+	return func(peer *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) int64 {
 		policy := getNodePolicy(peer.Node.PubKey, channel, outgoing)
 		return policy.FeeBaseMsat / 1000
 	}
 }
 
-func inboundFeeRatesFunc(peer *lnrpc.NodeInfo, outgoing bool) channelFunc[int32] {
-	return func(channel *lnrpc.ChannelEdge) int32 {
+func inboundFeeRatesFunc(outgoing bool) channelFunc[int32] {
+	return func(peer *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) int32 {
 		policy := getNodePolicy(peer.Node.PubKey, channel, outgoing)
 		return policy.InboundFeeRateMilliMsat / 1000
 	}
 }
 
-func inboundBaseFeesFunc(peer *lnrpc.NodeInfo, outgoing bool) channelFunc[int32] {
-	return func(channel *lnrpc.ChannelEdge) int32 {
+func inboundBaseFeesFunc(outgoing bool) channelFunc[int32] {
+	return func(peer *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) int32 {
 		policy := getNodePolicy(peer.Node.PubKey, channel, outgoing)
 		return policy.InboundFeeBaseMsat / 1000
 	}
