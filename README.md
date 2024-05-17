@@ -179,7 +179,7 @@ Parameters related to the initiator node's channels.
 > For instance, let's say Bob wants to open a channel with us and he already has one with Charlie. Bob has a base fee of 0 sats and Charlie has a base fee of 1 sat. In this case, the outgoing base fee is 0 sats (Bob's side) and the incoming base fee is 1 sat (Charlie's side).
 
 > [!Note]
-> **Inbound** fees were added in LND's v0.18.0-beta and they represent fees for the movement of incoming funds. A positive value would discourage peers from routing to the channel and a negative value would incentivize them.
+> **Inbound** fees were added in LND v0.18.0-beta and they represent fees for the movement of incoming funds. A positive value would discourage peers from routing to the channel and a negative value would incentivize them.
 
 #### Range
 
