@@ -9,21 +9,25 @@ import (
 
 // Channels represents a set of requirements that the initiator's node channels must satisfy.
 type Channels struct {
-	Number           *Range[uint32]      `yaml:"number,omitempty"`
-	Capacity         *StatRange[int64]   `yaml:"capacity,omitempty"`
-	ZeroBaseFees     *bool               `yaml:"zero_base_fees,omitempty"`
-	BlockHeight      *StatRange[uint32]  `yaml:"block_height,omitempty"`
-	TimeLockDelta    *StatRange[uint32]  `yaml:"time_lock_delta,omitempty"`
-	MinHTLC          *StatRange[int64]   `yaml:"min_htlc,omitempty"`
-	MaxHTLC          *StatRange[uint64]  `yaml:"max_htlc,omitempty"`
-	LastUpdateDiff   *StatRange[uint32]  `yaml:"last_update_diff,omitempty"`
-	Together         *Range[int]         `yaml:"together,omitempty"`
-	IncomingFeeRates *StatRange[int64]   `yaml:"incoming_fee_rates,omitempty"`
-	OutgoingFeeRates *StatRange[int64]   `yaml:"outgoing_fee_rates,omitempty"`
-	IncomingBaseFees *StatRange[int64]   `yaml:"incoming_base_fees,omitempty"`
-	OutgoingBaseFees *StatRange[int64]   `yaml:"outgoing_base_fees,omitempty"`
-	IncomingDisabled *StatRange[float64] `yaml:"incoming_disabled,omitempty"`
-	OutgoingDisabled *StatRange[float64] `yaml:"outgoing_disabled,omitempty"`
+	Number                  *Range[uint32]      `yaml:"number,omitempty"`
+	Capacity                *StatRange[int64]   `yaml:"capacity,omitempty"`
+	ZeroBaseFees            *bool               `yaml:"zero_base_fees,omitempty"`
+	BlockHeight             *StatRange[uint32]  `yaml:"block_height,omitempty"`
+	TimeLockDelta           *StatRange[uint32]  `yaml:"time_lock_delta,omitempty"`
+	MinHTLC                 *StatRange[int64]   `yaml:"min_htlc,omitempty"`
+	MaxHTLC                 *StatRange[uint64]  `yaml:"max_htlc,omitempty"`
+	LastUpdateDiff          *StatRange[uint32]  `yaml:"last_update_diff,omitempty"`
+	Together                *Range[int]         `yaml:"together,omitempty"`
+	IncomingFeeRates        *StatRange[int64]   `yaml:"incoming_fee_rates,omitempty"`
+	OutgoingFeeRates        *StatRange[int64]   `yaml:"outgoing_fee_rates,omitempty"`
+	IncomingBaseFees        *StatRange[int64]   `yaml:"incoming_base_fees,omitempty"`
+	OutgoingBaseFees        *StatRange[int64]   `yaml:"outgoing_base_fees,omitempty"`
+	IncomingDisabled        *StatRange[float64] `yaml:"incoming_disabled,omitempty"`
+	OutgoingDisabled        *StatRange[float64] `yaml:"outgoing_disabled,omitempty"`
+	IncomingInboundFeeRates *StatRange[int32]   `yaml:"incoming_inbound_fees_rates,omitempty"`
+	OutgoingInboundFeeRates *StatRange[int32]   `yaml:"outgoing_inbound_fees_rates,omitempty"`
+	IncomingInboundBaseFees *StatRange[int32]   `yaml:"incoming_inbound_base_fees,omitempty"`
+	OutgoingInboundBaseFees *StatRange[int32]   `yaml:"outgoing_inbound_base_fees,omitempty"`
 }
 
 func (c *Channels) evaluate(nodePublicKey string, peer *lnrpc.NodeInfo) error {
@@ -81,6 +85,22 @@ func (c *Channels) evaluate(nodePublicKey string, peer *lnrpc.NodeInfo) error {
 
 	if !checkStat(c.OutgoingBaseFees, peer, baseFeesFunc(peer, true)) {
 		return errors.New("Outgoing base fees " + c.OutgoingBaseFees.Reason())
+	}
+
+	if !checkStat(c.IncomingInboundFeeRates, peer, inboundFeeRatesFunc(peer, false)) {
+		return errors.New("Incoming inbound fee rates " + c.IncomingInboundFeeRates.Reason())
+	}
+
+	if !checkStat(c.OutgoingInboundFeeRates, peer, inboundFeeRatesFunc(peer, true)) {
+		return errors.New("Outgoing inbound fee rates " + c.OutgoingInboundFeeRates.Reason())
+	}
+
+	if !checkStat(c.IncomingInboundBaseFees, peer, inboundBaseFeesFunc(peer, false)) {
+		return errors.New("Incoming inbound base fees " + c.IncomingInboundBaseFees.Reason())
+	}
+
+	if !checkStat(c.OutgoingInboundBaseFees, peer, inboundBaseFeesFunc(peer, true)) {
+		return errors.New("Outgoing inbound base fees " + c.OutgoingInboundBaseFees.Reason())
 	}
 
 	if !c.checkIncomingDisabled(peer) {
@@ -213,7 +233,7 @@ func lastUpdateFunc(peer *lnrpc.NodeInfo, now int64) channelFunc[uint32] {
 func feeRatesFunc(peer *lnrpc.NodeInfo, outgoing bool) channelFunc[int64] {
 	return func(channel *lnrpc.ChannelEdge) int64 {
 		policy := getNodePolicy(peer.Node.PubKey, channel, outgoing)
-		return policy.FeeRateMilliMsat
+		return policy.FeeRateMilliMsat / 1000
 	}
 }
 
@@ -221,5 +241,19 @@ func baseFeesFunc(peer *lnrpc.NodeInfo, outgoing bool) channelFunc[int64] {
 	return func(channel *lnrpc.ChannelEdge) int64 {
 		policy := getNodePolicy(peer.Node.PubKey, channel, outgoing)
 		return policy.FeeBaseMsat / 1000
+	}
+}
+
+func inboundFeeRatesFunc(peer *lnrpc.NodeInfo, outgoing bool) channelFunc[int32] {
+	return func(channel *lnrpc.ChannelEdge) int32 {
+		policy := getNodePolicy(peer.Node.PubKey, channel, outgoing)
+		return policy.InboundFeeRateMilliMsat / 1000
+	}
+}
+
+func inboundBaseFeesFunc(peer *lnrpc.NodeInfo, outgoing bool) channelFunc[int32] {
+	return func(channel *lnrpc.ChannelEdge) int32 {
+		policy := getNodePolicy(peer.Node.PubKey, channel, outgoing)
+		return policy.InboundFeeBaseMsat / 1000
 	}
 }
