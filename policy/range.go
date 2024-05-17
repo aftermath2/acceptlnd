@@ -116,7 +116,7 @@ func (a StatRange[T]) Reason() string {
 	return sb.String()
 }
 
-type channelFunc[T Number] func(channel *lnrpc.ChannelEdge) T
+type channelFunc[T Number] func(peer *lnrpc.NodeInfo, channel *lnrpc.ChannelEdge) T
 
 func checkStat[T Number](
 	sr *StatRange[T],
@@ -129,7 +129,7 @@ func checkStat[T Number](
 
 	values := make([]T, 0, len(peer.Channels))
 	for _, channel := range peer.Channels {
-		value := f(channel)
+		value := f(peer, channel)
 		values = append(values, value)
 	}
 

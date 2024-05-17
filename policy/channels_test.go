@@ -1008,7 +1008,7 @@ func TestBlockHeightFunc(t *testing.T) {
 		ChannelId: 623702369048395776,
 	}
 	expected := uint32(567254)
-	actual := blockHeightFunc(channel)
+	actual := blockHeightFunc(nil, channel)
 	assert.Equal(t, expected, actual)
 }
 
@@ -1022,7 +1022,7 @@ func TestTimeLockDeltaFunc(t *testing.T) {
 		Node1Pub:    publicKey,
 		Node1Policy: &lnrpc.RoutingPolicy{TimeLockDelta: expected},
 	}
-	actual := timeLockDeltaFunc(peer)(channel)
+	actual := timeLockDeltaFunc()(peer, channel)
 	assert.Equal(t, expected, actual)
 }
 
@@ -1036,7 +1036,7 @@ func TestMinHTLCFunc(t *testing.T) {
 		Node1Pub:    publicKey,
 		Node1Policy: &lnrpc.RoutingPolicy{MinHtlc: expected},
 	}
-	actual := minHTLCFunc(peer)(channel)
+	actual := minHTLCFunc()(peer, channel)
 	assert.Equal(t, expected, actual)
 }
 
@@ -1050,7 +1050,7 @@ func TestMaxHTLCFunc(t *testing.T) {
 		Node1Pub:    publicKey,
 		Node1Policy: &lnrpc.RoutingPolicy{MaxHtlcMsat: expected * 1000},
 	}
-	actual := maxHTLCFunc(peer)(channel)
+	actual := maxHTLCFunc()(peer, channel)
 	assert.Equal(t, expected, actual)
 }
 
@@ -1064,7 +1064,7 @@ func TestLastUpdateFunc(t *testing.T) {
 		Node1Pub:    publicKey,
 		Node1Policy: &lnrpc.RoutingPolicy{LastUpdate: expected},
 	}
-	actual := lastUpdateFunc(peer, 1000)(channel)
+	actual := lastUpdateFunc(1000)(peer, channel)
 	assert.Equal(t, expected, actual)
 }
 
@@ -1076,7 +1076,7 @@ func TestFeeRatesFunc(t *testing.T) {
 			Node2Pub:    "pub",
 			Node2Policy: &lnrpc.RoutingPolicy{FeeRateMilliMsat: expected * 1000},
 		}
-		actual := feeRatesFunc(peer, false)(channel)
+		actual := feeRatesFunc(false)(peer, channel)
 		assert.Equal(t, expected, actual)
 	})
 
@@ -1090,7 +1090,7 @@ func TestFeeRatesFunc(t *testing.T) {
 			Node1Pub:    publicKey,
 			Node1Policy: &lnrpc.RoutingPolicy{FeeRateMilliMsat: expected * 1000},
 		}
-		actual := feeRatesFunc(peer, true)(channel)
+		actual := feeRatesFunc(true)(peer, channel)
 		assert.Equal(t, expected, actual)
 	})
 }
@@ -1103,7 +1103,7 @@ func TestBaseFeesFunc(t *testing.T) {
 			Node2Pub:    "pub",
 			Node2Policy: &lnrpc.RoutingPolicy{FeeBaseMsat: expected * 1000},
 		}
-		actual := baseFeesFunc(peer, false)(channel)
+		actual := baseFeesFunc(false)(peer, channel)
 		assert.Equal(t, expected, actual)
 	})
 
@@ -1117,7 +1117,7 @@ func TestBaseFeesFunc(t *testing.T) {
 			Node1Pub:    publicKey,
 			Node1Policy: &lnrpc.RoutingPolicy{FeeBaseMsat: expected * 1000},
 		}
-		actual := baseFeesFunc(peer, true)(channel)
+		actual := baseFeesFunc(true)(peer, channel)
 		assert.Equal(t, expected, actual)
 	})
 }
@@ -1130,7 +1130,7 @@ func TestInboundFeeRatesFunc(t *testing.T) {
 			Node2Pub:    "pub",
 			Node2Policy: &lnrpc.RoutingPolicy{InboundFeeRateMilliMsat: expected * 1000},
 		}
-		actual := inboundFeeRatesFunc(peer, false)(channel)
+		actual := inboundFeeRatesFunc(false)(peer, channel)
 		assert.Equal(t, expected, actual)
 	})
 
@@ -1144,7 +1144,7 @@ func TestInboundFeeRatesFunc(t *testing.T) {
 			Node1Pub:    publicKey,
 			Node1Policy: &lnrpc.RoutingPolicy{InboundFeeRateMilliMsat: expected * 1000},
 		}
-		actual := inboundFeeRatesFunc(peer, true)(channel)
+		actual := inboundFeeRatesFunc(true)(peer, channel)
 		assert.Equal(t, expected, actual)
 	})
 }
@@ -1157,7 +1157,7 @@ func TestInboundBaseFeesFunc(t *testing.T) {
 			Node2Pub:    "pub",
 			Node2Policy: &lnrpc.RoutingPolicy{InboundFeeBaseMsat: expected * 1000},
 		}
-		actual := inboundBaseFeesFunc(peer, false)(channel)
+		actual := inboundBaseFeesFunc(false)(peer, channel)
 		assert.Equal(t, expected, actual)
 	})
 
@@ -1171,7 +1171,7 @@ func TestInboundBaseFeesFunc(t *testing.T) {
 			Node1Pub:    publicKey,
 			Node1Policy: &lnrpc.RoutingPolicy{InboundFeeBaseMsat: expected * 1000},
 		}
-		actual := inboundBaseFeesFunc(peer, true)(channel)
+		actual := inboundBaseFeesFunc(true)(peer, channel)
 		assert.Equal(t, expected, actual)
 	})
 }
