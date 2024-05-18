@@ -29,8 +29,13 @@ func TestEvaluateChannels(t *testing.T) {
 			channels: nil,
 		},
 		{
-			desc:     "Empty channels",
-			channels: &Channels{},
+			desc:     "Nil peers",
+			channels: &Channels{Peers: nil},
+			peer:     &lnrpc.NodeInfo{},
+		},
+		{
+			desc:     "Empty channels and peers",
+			channels: &Channels{Peers: &Peers{}},
 			peer:     &lnrpc.NodeInfo{},
 		},
 		{
@@ -218,10 +223,12 @@ func TestEvaluateChannels(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Incoming fee rates",
+			desc: "Peers fee rates",
 			channels: &Channels{
-				IncomingFeeRates: &StatRange[int64]{
-					Max: &max64,
+				Peers: &Peers{
+					FeeRates: &StatRange[int64]{
+						Max: &max64,
+					},
 				},
 			},
 			peer: &lnrpc.NodeInfo{
@@ -240,9 +247,9 @@ func TestEvaluateChannels(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Outgoing fee rates",
+			desc: "Fee rates",
 			channels: &Channels{
-				OutgoingFeeRates: &StatRange[int64]{
+				FeeRates: &StatRange[int64]{
 					Max: &max64,
 				},
 			},
@@ -262,10 +269,12 @@ func TestEvaluateChannels(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Incoming base fees",
+			desc: "Peers base fees",
 			channels: &Channels{
-				IncomingBaseFees: &StatRange[int64]{
-					Max: &max64,
+				Peers: &Peers{
+					BaseFees: &StatRange[int64]{
+						Max: &max64,
+					},
 				},
 			},
 			peer: &lnrpc.NodeInfo{
@@ -284,9 +293,9 @@ func TestEvaluateChannels(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Outgoing base fees",
+			desc: "Base fees",
 			channels: &Channels{
-				OutgoingBaseFees: &StatRange[int64]{
+				BaseFees: &StatRange[int64]{
 					Max: &max64,
 				},
 			},
@@ -306,10 +315,12 @@ func TestEvaluateChannels(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Incoming disabled",
+			desc: "Peers disabled",
 			channels: &Channels{
-				IncomingDisabled: &StatRange[float64]{
-					Max: &maxFloat,
+				Peers: &Peers{
+					Disabled: &StatRange[float64]{
+						Max: &maxFloat,
+					},
 				},
 			},
 			peer: &lnrpc.NodeInfo{
@@ -328,9 +339,9 @@ func TestEvaluateChannels(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Outgoing disabled",
+			desc: "Disabled",
 			channels: &Channels{
-				OutgoingDisabled: &StatRange[float64]{
+				Disabled: &StatRange[float64]{
 					Max: &maxFloat,
 				},
 			},
@@ -350,10 +361,12 @@ func TestEvaluateChannels(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Incoming inbound fee rates",
+			desc: "Peers inbound fee rates",
 			channels: &Channels{
-				IncomingInboundFeeRates: &StatRange[int32]{
-					Max: &max32,
+				Peers: &Peers{
+					InboundFeeRates: &StatRange[int32]{
+						Max: &max32,
+					},
 				},
 			},
 			peer: &lnrpc.NodeInfo{
@@ -372,9 +385,9 @@ func TestEvaluateChannels(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Outgoing inbound fee rates",
+			desc: "Inbound fee rates",
 			channels: &Channels{
-				OutgoingInboundFeeRates: &StatRange[int32]{
+				InboundFeeRates: &StatRange[int32]{
 					Max: &max32,
 				},
 			},
@@ -394,10 +407,12 @@ func TestEvaluateChannels(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Incoming inbound base fees",
+			desc: "Peers inbound base fees",
 			channels: &Channels{
-				IncomingInboundBaseFees: &StatRange[int32]{
-					Max: &max32,
+				Peers: &Peers{
+					InboundBaseFees: &StatRange[int32]{
+						Max: &max32,
+					},
 				},
 			},
 			peer: &lnrpc.NodeInfo{
@@ -416,9 +431,9 @@ func TestEvaluateChannels(t *testing.T) {
 			fail: true,
 		},
 		{
-			desc: "Outgoing inbound base fees",
+			desc: "Inbound base fees",
 			channels: &Channels{
-				OutgoingInboundBaseFees: &StatRange[int32]{
+				InboundBaseFees: &StatRange[int32]{
 					Max: &max32,
 				},
 			},
@@ -679,19 +694,19 @@ func TestCheckTogether(t *testing.T) {
 	})
 }
 
-func TestCheckIncomingDisabled(t *testing.T) {
+func TestCheckPeersDisabled(t *testing.T) {
 	peerPublicKey := "peer_public_key"
 	value := 0.6
 
 	cases := []struct {
-		peer             *lnrpc.NodeInfo
-		incomingDisabled *StatRange[float64]
-		desc             string
-		expected         bool
+		peer          *lnrpc.NodeInfo
+		peersDisabled *StatRange[float64]
+		desc          string
+		expected      bool
 	}{
 		{
 			desc: "Maximum disabled channels rate met",
-			incomingDisabled: &StatRange[float64]{
+			peersDisabled: &StatRange[float64]{
 				Operation: Mean,
 				Max:       &value,
 			},
@@ -710,7 +725,7 @@ func TestCheckIncomingDisabled(t *testing.T) {
 		},
 		{
 			desc: "Maximum disabled channels rate not met",
-			incomingDisabled: &StatRange[float64]{
+			peersDisabled: &StatRange[float64]{
 				Operation: Mean,
 				Max:       &value,
 			},
@@ -729,7 +744,7 @@ func TestCheckIncomingDisabled(t *testing.T) {
 		},
 		{
 			desc: "Minimum disabled channels rate met",
-			incomingDisabled: &StatRange[float64]{
+			peersDisabled: &StatRange[float64]{
 				Operation: Mean,
 				Min:       &value,
 			},
@@ -748,7 +763,7 @@ func TestCheckIncomingDisabled(t *testing.T) {
 		},
 		{
 			desc: "Minimum disabled channels rate not met",
-			incomingDisabled: &StatRange[float64]{
+			peersDisabled: &StatRange[float64]{
 				Operation: Mean,
 				Min:       &value,
 			},
@@ -770,33 +785,35 @@ func TestCheckIncomingDisabled(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			channels := Channels{
-				IncomingDisabled: tc.incomingDisabled,
+				Peers: &Peers{
+					Disabled: tc.peersDisabled,
+				},
 			}
 
-			actual := channels.checkIncomingDisabled(tc.peer)
+			actual := channels.checkPeersDisabled(tc.peer)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
 
 	t.Run("Nil", func(t *testing.T) {
-		channels := Channels{}
-		assert.True(t, channels.checkIncomingDisabled(nil))
+		channels := Channels{Peers: &Peers{}}
+		assert.True(t, channels.checkPeersDisabled(nil))
 	})
 }
 
-func TestCheckOutgoingDisabled(t *testing.T) {
+func TestCheckDisabled(t *testing.T) {
 	value := 0.6
 	peerPublicKey := "peer_public_key"
 
 	cases := []struct {
-		peer             *lnrpc.NodeInfo
-		outgoingDisabled *StatRange[float64]
-		desc             string
-		expected         bool
+		peer     *lnrpc.NodeInfo
+		disabled *StatRange[float64]
+		desc     string
+		expected bool
 	}{
 		{
 			desc: "Maximum disabled channels rate met",
-			outgoingDisabled: &StatRange[float64]{
+			disabled: &StatRange[float64]{
 				Operation: Mean,
 				Max:       &value,
 			},
@@ -827,7 +844,7 @@ func TestCheckOutgoingDisabled(t *testing.T) {
 		},
 		{
 			desc: "Maximum disabled channels rate not met",
-			outgoingDisabled: &StatRange[float64]{
+			disabled: &StatRange[float64]{
 				Operation: Mean,
 				Max:       &value,
 			},
@@ -858,7 +875,7 @@ func TestCheckOutgoingDisabled(t *testing.T) {
 		},
 		{
 			desc: "Minimum disabled channels rate met",
-			outgoingDisabled: &StatRange[float64]{
+			disabled: &StatRange[float64]{
 				Operation: Mean,
 				Min:       &value,
 			},
@@ -889,7 +906,7 @@ func TestCheckOutgoingDisabled(t *testing.T) {
 		},
 		{
 			desc: "Minimum disabled channels rate not met",
-			outgoingDisabled: &StatRange[float64]{
+			disabled: &StatRange[float64]{
 				Operation: Mean,
 				Min:       &value,
 			},
@@ -923,17 +940,17 @@ func TestCheckOutgoingDisabled(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			channels := Channels{
-				OutgoingDisabled: tc.outgoingDisabled,
+				Disabled: tc.disabled,
 			}
 
-			actual := channels.checkOutgoingDisabled(tc.peer)
+			actual := channels.checkDisabled(tc.peer)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
 
 	t.Run("Nil", func(t *testing.T) {
 		channels := Channels{}
-		assert.True(t, channels.checkOutgoingDisabled(nil))
+		assert.True(t, channels.checkDisabled(nil))
 	})
 }
 
@@ -954,7 +971,7 @@ func TestGetNodePolicy(t *testing.T) {
 		outgoing      bool
 	}{
 		{
-			desc:          "Get incoming node policy",
+			desc:          "Get peers node policy",
 			peerPublicKey: publicKey,
 			channel: &lnrpc.ChannelEdge{
 				Node1Policy: expectedPolicy,
@@ -964,7 +981,7 @@ func TestGetNodePolicy(t *testing.T) {
 			outgoing: false,
 		},
 		{
-			desc:          "Get incoming node policy 2",
+			desc:          "Get peers node policy 2",
 			peerPublicKey: publicKey,
 			channel: &lnrpc.ChannelEdge{
 				Node1Pub:    publicKey,
@@ -974,7 +991,7 @@ func TestGetNodePolicy(t *testing.T) {
 			outgoing: false,
 		},
 		{
-			desc:          "Get outgoing node policy",
+			desc:          "Get node policy",
 			peerPublicKey: publicKey,
 			channel: &lnrpc.ChannelEdge{
 				Node1Pub:    publicKey,
@@ -984,7 +1001,7 @@ func TestGetNodePolicy(t *testing.T) {
 			outgoing: true,
 		},
 		{
-			desc:          "Get outgoing node policy 2",
+			desc:          "Get node policy 2",
 			peerPublicKey: publicKey,
 			channel: &lnrpc.ChannelEdge{
 				Node1Policy: otherPolicy,
@@ -1069,7 +1086,7 @@ func TestLastUpdateFunc(t *testing.T) {
 }
 
 func TestFeeRatesFunc(t *testing.T) {
-	t.Run("Incoming", func(t *testing.T) {
+	t.Run("Peers", func(t *testing.T) {
 		expected := int64(1)
 		peer := &lnrpc.NodeInfo{Node: &lnrpc.LightningNode{}}
 		channel := &lnrpc.ChannelEdge{
@@ -1096,7 +1113,7 @@ func TestFeeRatesFunc(t *testing.T) {
 }
 
 func TestBaseFeesFunc(t *testing.T) {
-	t.Run("Incoming", func(t *testing.T) {
+	t.Run("Peers", func(t *testing.T) {
 		expected := int64(3)
 		peer := &lnrpc.NodeInfo{Node: &lnrpc.LightningNode{}}
 		channel := &lnrpc.ChannelEdge{
@@ -1123,7 +1140,7 @@ func TestBaseFeesFunc(t *testing.T) {
 }
 
 func TestInboundFeeRatesFunc(t *testing.T) {
-	t.Run("Incoming", func(t *testing.T) {
+	t.Run("Peers", func(t *testing.T) {
 		expected := int32(1)
 		peer := &lnrpc.NodeInfo{Node: &lnrpc.LightningNode{}}
 		channel := &lnrpc.ChannelEdge{
@@ -1150,7 +1167,7 @@ func TestInboundFeeRatesFunc(t *testing.T) {
 }
 
 func TestInboundBaseFeesFunc(t *testing.T) {
-	t.Run("Incoming", func(t *testing.T) {
+	t.Run("Peers", func(t *testing.T) {
 		expected := int32(1)
 		peer := &lnrpc.NodeInfo{Node: &lnrpc.LightningNode{}}
 		channel := &lnrpc.ChannelEdge{

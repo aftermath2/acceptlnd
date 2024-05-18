@@ -2,7 +2,7 @@ policies:
   -
     node:
       channels:
-        outgoing_fee_rates:
+        fee_rates:
           operation: median
           min: 0
           max: 100

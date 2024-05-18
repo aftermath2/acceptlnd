@@ -162,24 +162,27 @@ Parameters related to the initiator node's channels.
 | **max_htlc** | stat_range | Channels maximum HTLC |
 | **last_update_diff** | stat_range | Channels last update difference to the time of the request (seconds) |
 | **together** | range | Number of channels that the host node and initiator node have together |
-| **incoming_fee_rates** | stat_range | Channels incoming fee rates |
-| **outgoing_fee_rates** | stat_range | Channels outgoing fee rates |
-| **incoming_base_fees** | stat_range | Channels incoming base fees |
-| **outgoing_base_fees** | stat_range | Channels outgoing base fees |
-| **outgoing_disabled** | stat_range | Number of outgoing disabled channels. The value type is float and should be between 0 and 1 |
-| **incoming_disabled** | stat_range | Number of incoming disabled channels. The value type is float and should be between 0 and 1 |
-| **incoming_inbound_fee_rates** | stat_range | Channels incoming inbound fee rates |
-| **outgoing_inbound_fee_rates** | stat_range | Channels outgoing inbound fee rates |
-| **incoming_inbound_base_fees** | stat_range | Channels incoming inbound base fees |
-| **outgoing_inbound_base_fees** | stat_range | Channels outgoing inbound base fees |
-
-> [!Note]
-> **Outgoing** refers to the channel value from the initiator's node side, **incoming** to the value corresponding to the initiator node's peer side.
->
-> For instance, let's say Bob wants to open a channel with us and he already has one with Charlie. Bob has a base fee of 0 sats and Charlie has a base fee of 1 sat. In this case, the outgoing base fee is 0 sats (Bob's side) and the incoming base fee is 1 sat (Charlie's side).
+| **fee_rates** | stat_range | Channels fee rates |
+| **base_fees** | stat_range | Channels base fees |
+| **disabled** | stat_range | Number of disabled channels. The value type is float and should be between 0 and 1 |
+| **inbound_fee_rates** | stat_range | Channels inbound fee rates |
+| **inbound_base_fees** | stat_range | Channels inbound base fees |
+| **peers** | [Peers](#Peers) | Initiator node channels parameters on the peers' side |
 
 > [!Note]
 > **Inbound** fees were added in LND v0.18.0-beta and they represent fees for the movement of incoming funds. A positive value would discourage peers from routing to the channel and a negative value would incentivize them.
+
+#### Peers
+
+Initiator node channels parameters on the peers' side.
+
+| Key | Type | Description |
+| -- | -- | -- |
+| **fee_rates** | stat_range | Channels fee rates |
+| **base_fees** | stat_range | Channels base fees |
+| **disabled** | stat_range | Number of disabled channels. The value type is float and should be between 0 and 1 |
+| **inbound_fee_rates** | stat_range | Channels inbound fee rates |
+| **inbound_base_fees** | stat_range | Channels inbound base fees |
 
 #### Range
 
