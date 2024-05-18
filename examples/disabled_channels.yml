@@ -2,9 +2,10 @@ policies:
   -
     node:
       channels:
-        incoming_disabled:
+        disabled:
           operation: mean
+          max: 0.05
+        peers:
+          disabled:
+            operation: mean
             max: 0.1
-        outgoing_disabled:
-        operation: mean
-            max: 0.05

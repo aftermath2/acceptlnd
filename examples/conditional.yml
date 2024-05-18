@@ -21,6 +21,6 @@ policies:
           min: 100_000_000
     node:
       channels:
-        outgoing_fee_rates:
+        fee_rates:
           operation: median
           max: 1000

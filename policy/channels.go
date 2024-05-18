@@ -9,25 +9,32 @@ import (
 
 // Channels represents a set of requirements that the initiator's node channels must satisfy.
 type Channels struct {
-	Number                  *Range[uint32]      `yaml:"number,omitempty"`
-	Capacity                *StatRange[int64]   `yaml:"capacity,omitempty"`
-	ZeroBaseFees            *bool               `yaml:"zero_base_fees,omitempty"`
-	BlockHeight             *StatRange[uint32]  `yaml:"block_height,omitempty"`
-	TimeLockDelta           *StatRange[uint32]  `yaml:"time_lock_delta,omitempty"`
-	MinHTLC                 *StatRange[int64]   `yaml:"min_htlc,omitempty"`
-	MaxHTLC                 *StatRange[uint64]  `yaml:"max_htlc,omitempty"`
-	LastUpdateDiff          *StatRange[uint32]  `yaml:"last_update_diff,omitempty"`
-	Together                *Range[int]         `yaml:"together,omitempty"`
-	IncomingFeeRates        *StatRange[int64]   `yaml:"incoming_fee_rates,omitempty"`
-	OutgoingFeeRates        *StatRange[int64]   `yaml:"outgoing_fee_rates,omitempty"`
-	IncomingBaseFees        *StatRange[int64]   `yaml:"incoming_base_fees,omitempty"`
-	OutgoingBaseFees        *StatRange[int64]   `yaml:"outgoing_base_fees,omitempty"`
-	IncomingDisabled        *StatRange[float64] `yaml:"incoming_disabled,omitempty"`
-	OutgoingDisabled        *StatRange[float64] `yaml:"outgoing_disabled,omitempty"`
-	IncomingInboundFeeRates *StatRange[int32]   `yaml:"incoming_inbound_fees_rates,omitempty"`
-	OutgoingInboundFeeRates *StatRange[int32]   `yaml:"outgoing_inbound_fees_rates,omitempty"`
-	IncomingInboundBaseFees *StatRange[int32]   `yaml:"incoming_inbound_base_fees,omitempty"`
-	OutgoingInboundBaseFees *StatRange[int32]   `yaml:"outgoing_inbound_base_fees,omitempty"`
+	Number          *Range[uint32]      `yaml:"number,omitempty"`
+	Capacity        *StatRange[int64]   `yaml:"capacity,omitempty"`
+	ZeroBaseFees    *bool               `yaml:"zero_base_fees,omitempty"`
+	BlockHeight     *StatRange[uint32]  `yaml:"block_height,omitempty"`
+	TimeLockDelta   *StatRange[uint32]  `yaml:"time_lock_delta,omitempty"`
+	MinHTLC         *StatRange[int64]   `yaml:"min_htlc,omitempty"`
+	MaxHTLC         *StatRange[uint64]  `yaml:"max_htlc,omitempty"`
+	LastUpdateDiff  *StatRange[uint32]  `yaml:"last_update_diff,omitempty"`
+	Together        *Range[int]         `yaml:"together,omitempty"`
+	FeeRates        *StatRange[int64]   `yaml:"fee_rates,omitempty"`
+	BaseFees        *StatRange[int64]   `yaml:"base_fees,omitempty"`
+	Disabled        *StatRange[float64] `yaml:"disabled,omitempty"`
+	InboundFeeRates *StatRange[int32]   `yaml:"inbound_fees_rates,omitempty"`
+	InboundBaseFees *StatRange[int32]   `yaml:"inbound_base_fees,omitempty"`
+	Peers           *Peers              `yaml:"peers,omitempty"`
+}
+
+// Peers contains information about the initiator node channels peers.
+//
+// Fields must be duplicated to follow the YAML structure desired.
+type Peers struct {
+	FeeRates        *StatRange[int64]   `yaml:"fee_rates,omitempty"`
+	BaseFees        *StatRange[int64]   `yaml:"base_fees,omitempty"`
+	Disabled        *StatRange[float64] `yaml:"disabled,omitempty"`
+	InboundFeeRates *StatRange[int32]   `yaml:"inbound_fees_rates,omitempty"`
+	InboundBaseFees *StatRange[int32]   `yaml:"inbound_base_fees,omitempty"`
 }
 
 func (c *Channels) evaluate(nodePublicKey string, peer *lnrpc.NodeInfo) error {
@@ -71,44 +78,48 @@ func (c *Channels) evaluate(nodePublicKey string, peer *lnrpc.NodeInfo) error {
 		return errors.New("Channels together " + c.Together.Reason())
 	}
 
-	if !checkStat(c.IncomingFeeRates, peer, feeRatesFunc(false)) {
-		return errors.New("Incoming fee rates " + c.IncomingFeeRates.Reason())
+	if !checkStat(c.FeeRates, peer, feeRatesFunc(true)) {
+		return errors.New("Channels fee rates " + c.FeeRates.Reason())
 	}
 
-	if !checkStat(c.OutgoingFeeRates, peer, feeRatesFunc(true)) {
-		return errors.New("Outgoing fee rates " + c.OutgoingFeeRates.Reason())
+	if !checkStat(c.BaseFees, peer, baseFeesFunc(true)) {
+		return errors.New("Channels base fees " + c.BaseFees.Reason())
 	}
 
-	if !checkStat(c.IncomingBaseFees, peer, baseFeesFunc(false)) {
-		return errors.New("Incoming base fees " + c.IncomingBaseFees.Reason())
+	if !checkStat(c.InboundFeeRates, peer, inboundFeeRatesFunc(true)) {
+		return errors.New("Channels inbound fee rates " + c.InboundFeeRates.Reason())
 	}
 
-	if !checkStat(c.OutgoingBaseFees, peer, baseFeesFunc(true)) {
-		return errors.New("Outgoing base fees " + c.OutgoingBaseFees.Reason())
+	if !checkStat(c.InboundBaseFees, peer, inboundBaseFeesFunc(true)) {
+		return errors.New("Channels inbound base fees " + c.InboundBaseFees.Reason())
 	}
 
-	if !checkStat(c.IncomingInboundFeeRates, peer, inboundFeeRatesFunc(false)) {
-		return errors.New("Incoming inbound fee rates " + c.IncomingInboundFeeRates.Reason())
+	if !c.checkDisabled(peer) {
+		return errors.New("Disabled channels " + c.Disabled.Reason())
 	}
 
-	if !checkStat(c.OutgoingInboundFeeRates, peer, inboundFeeRatesFunc(true)) {
-		return errors.New("Outgoing inbound fee rates " + c.OutgoingInboundFeeRates.Reason())
+	if c.Peers == nil {
+		return nil
 	}
 
-	if !checkStat(c.IncomingInboundBaseFees, peer, inboundBaseFeesFunc(false)) {
-		return errors.New("Incoming inbound base fees " + c.IncomingInboundBaseFees.Reason())
+	if !checkStat(c.Peers.FeeRates, peer, feeRatesFunc(false)) {
+		return errors.New("Peers fee rates " + c.Peers.FeeRates.Reason())
 	}
 
-	if !checkStat(c.OutgoingInboundBaseFees, peer, inboundBaseFeesFunc(true)) {
-		return errors.New("Outgoing inbound base fees " + c.OutgoingInboundBaseFees.Reason())
+	if !checkStat(c.Peers.BaseFees, peer, baseFeesFunc(false)) {
+		return errors.New("Peers base fees " + c.Peers.BaseFees.Reason())
 	}
 
-	if !c.checkIncomingDisabled(peer) {
-		return errors.New("Incoming disabled channels " + c.IncomingDisabled.Reason())
+	if !checkStat(c.Peers.InboundFeeRates, peer, inboundFeeRatesFunc(false)) {
+		return errors.New("Peers inbound fee rates " + c.Peers.InboundFeeRates.Reason())
 	}
 
-	if !c.checkOutgoingDisabled(peer) {
-		return errors.New("Outgoing disabled channels " + c.OutgoingDisabled.Reason())
+	if !checkStat(c.Peers.InboundBaseFees, peer, inboundBaseFeesFunc(false)) {
+		return errors.New("Peers inbound base fees " + c.Peers.InboundBaseFees.Reason())
+	}
+
+	if !c.checkPeersDisabled(peer) {
+		return errors.New("Peers disabled channels " + c.Peers.Disabled.Reason())
 	}
 
 	return nil
@@ -144,25 +155,8 @@ func (c *Channels) checkTogether(nodePublicKey string, peer *lnrpc.NodeInfo) boo
 	return c.Together.Contains(count)
 }
 
-func (c *Channels) checkIncomingDisabled(peer *lnrpc.NodeInfo) bool {
-	if c.IncomingDisabled == nil {
-		return true
-	}
-
-	disabledChannels := make([]float64, len(peer.Channels))
-	for i, channel := range peer.Channels {
-		policy := getNodePolicy(peer.Node.PubKey, channel, false)
-
-		if policy.Disabled {
-			disabledChannels[i] = 1
-		}
-	}
-
-	return c.IncomingDisabled.Contains(disabledChannels)
-}
-
-func (c *Channels) checkOutgoingDisabled(peer *lnrpc.NodeInfo) bool {
-	if c.OutgoingDisabled == nil {
+func (c *Channels) checkDisabled(peer *lnrpc.NodeInfo) bool {
+	if c.Disabled == nil {
 		return true
 	}
 
@@ -175,7 +169,24 @@ func (c *Channels) checkOutgoingDisabled(peer *lnrpc.NodeInfo) bool {
 		}
 	}
 
-	return c.OutgoingDisabled.Contains(disabledChannels)
+	return c.Disabled.Contains(disabledChannels)
+}
+
+func (c *Channels) checkPeersDisabled(peer *lnrpc.NodeInfo) bool {
+	if c.Peers.Disabled == nil {
+		return true
+	}
+
+	disabledChannels := make([]float64, len(peer.Channels))
+	for i, channel := range peer.Channels {
+		policy := getNodePolicy(peer.Node.PubKey, channel, false)
+
+		if policy.Disabled {
+			disabledChannels[i] = 1
+		}
+	}
+
+	return c.Peers.Disabled.Contains(disabledChannels)
 }
 
 func getNodePolicy(peerPublicKey string, channel *lnrpc.ChannelEdge, outgoing bool) *lnrpc.RoutingPolicy {

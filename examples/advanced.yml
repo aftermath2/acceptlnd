@@ -9,11 +9,11 @@ policies:
       age:
         min: 52_560
       channels:
-        outgoing_fee_rates:
+        fee_rates:
           operation: median
           min: 0
           max: 200
-        outgoing_base_fees:
+        base_fees:
           operation: range
           max: 1
         block_height:
