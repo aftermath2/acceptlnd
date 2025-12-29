@@ -13,6 +13,7 @@ import (
 	"github.com/aftermath2/acceptlnd/lightning"
 
 	"github.com/lightningnetwork/lnd/lnrpc"
+	"github.com/lightningnetwork/lnd/lnwire"
 	"github.com/pkg/errors"
 )
 
@@ -114,7 +115,19 @@ func handleRequest(
 	}
 	peer, err := client.GetNodeInfo(ctx, getPeerInfoReq)
 	if err != nil {
-		return resp, errors.New("Internal server error")
+		if req.ChannelFlags == uint32(lnwire.FFAnnounceChannel) {
+			return resp, errors.New("Internal server error")
+		}
+
+		slog.Warn("Couldn't get peer node information, likely because it has no public channels. Using request details")
+		peer = &lnrpc.NodeInfo{
+			Node: &lnrpc.LightningNode{
+				PubKey: hex.EncodeToString(req.NodePubkey),
+			},
+			TotalCapacity: 0,
+			Channels:      []*lnrpc.ChannelEdge{},
+			NumChannels:   0,
+		}
 	}
 	slog.Debug("Peer node information", slog.Any("node", peer))
 
